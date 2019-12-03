@@ -7,7 +7,7 @@
 #define DBG_OUTPUT_PORT Serial
 
 const byte DNS_PORT = 53;
-const char *ssid = "FREE AMAZING WIFI";
+const char *ssid = "!CONNECT WHEN BORED";
 
 IPAddress apIP(192, 168, 1, 1);
 
