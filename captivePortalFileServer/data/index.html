@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
   
-    <title>Loneliness</title>
+    <title>Coffee friend</title>
 
     <style>
      body,html,canvas{
@@ -18,7 +18,7 @@
 
     }
     body{
-      background: linear-gradient(#12C2E9,#9586EC);
+      background: linear-gradient(#9586EC,#12C2E9);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
       padding: 50px;
     }
@@ -29,7 +29,7 @@
     button{
         padding: 20px;
         font-size:1.5em;
-        border-radius: 30px;
+        border-radius: 20px;
         appearance: none;
         color:#fff;
         border: 4px solid #fff;
@@ -41,25 +41,74 @@
         color:#12C2E9;
     }
 
+    .page{
+    width:100%;
+    height:100%;
+    position:absolute;
+    top:0;
+    left:0;
+    opacity: 1;
+    transition: opacity 0.3s;
+    padding:50px;
+
+    }
+    .hidden{
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    img{
+        max-width: 100%;
+        border-radius: 10px;
+        
+    }
+    *,*::after,*::before{
+        box-sizing: border-box;
+    }
     </style>
     <script>
     function play(){
        var audio = document.getElementById("audio");
        audio.play();
-                 }
+    }
+
+    function goToPage(page){
+        switch(page){
+
+            case 2:
+              document.getElementById('home').classList.add('hidden');
+              document.getElementById('second').classList.remove('hidden');
+            break;
+        }
+    }
+
     </script>
 </head>
 <body>
-    <audio id="audio" src="hey.mp3" ></audio>
-    <h1>
-        hello lonely bitsj
-    </h1>
-    <p>
-       why u lonely go make frends stop lookng @ ur phone
-    </p>
-    <button onclick="play()">
-        Confirm Loneliness
-    </button>
-    
+    <section id="main">
+        <div class="page" id="home">
+                <h1>
+                    hello bored person.
+                </h1>
+                <p>
+                
+                </p>  
+                <p>You probably came here looking for WiFi.</p>
+                <p>We have something else to offer, making a new friend. Right here!</p>  
+                <p>Are you in?</p>
+                <button onclick="goToPage(2)"> 
+                    Yes, I want to socialize
+                </button>
+                <p>(we're prototyping ideas to bring travellers closer together)</p>
+            </div>
+            <div class="page hidden" id="second">
+                <h1>Come find us.</h1>
+                <p>We're at the chairs between Platforms 19 and 21</p>.
+                <img src="chairs.png"/>
+                <p>We're these curly boys:</p>
+                <img src="cool.png"/>
+                <p>We like talking about anything:)</p>
+            </div>
+    </section>
 </body>
 </html>
