@@ -26,16 +26,40 @@
         box-sizing: border-box;
     }
 
+    button{
+        padding: 20px;
+        font-size:1.5em;
+        border-radius: 30px;
+        appearance: none;
+        color:#fff;
+        border: 4px solid #fff;
+        background: none;
+        transition:background 0.2s;
+    }
+    button:hover{
+        background: #fff;
+        color:#12C2E9;
+    }
+
     </style>
+    <script>
+    function play(){
+       var audio = document.getElementById("audio");
+       audio.play();
+                 }
+    </script>
 </head>
 <body>
+    <audio id="audio" src="hey.mp3" ></audio>
     <h1>
         hello lonely bitsj
     </h1>
     <p>
        why u lonely go make frends stop lookng @ ur phone
     </p>
-
+    <button onclick="play()">
+        Confirm Loneliness
+    </button>
     
 </body>
 </html>
