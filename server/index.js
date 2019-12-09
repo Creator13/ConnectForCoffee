@@ -21,13 +21,17 @@ godview.on('connection',(socket) =>{
     socket.on('kill-room', (roomId) => {
         console.log('kill room '+roomId);
         
-    io.in(roomId).emit('room-killed', (roomId));
         io.in(roomId).clients((error, clients) => {
             if(error)
                 console.log(error)
 
             for(let client of clients){
-                io.sockets.connected[client].leave(roomId)
+
+                console.log('clients in room: '+client)
+                io.to(client).emit('room-killed');
+                
+                let clientSocket = io.sockets.connected[client];
+                clientSocket.leave(roomId);
             }
         });
     });
@@ -76,12 +80,12 @@ io.on('connection', (socket) => {
         // just remove it from open rooms list
         if(index>=0){
             openRooms.splice(index,1);
-            godview.emit('log',{room:matchRoom, user: socket.id, msg:'disconnected from waiting room'}); 
+            godview.emit('log',{room:matchRoom, user: socket.id, message:'disconnected from waiting room'}); 
         }else{
 
            // let other user know they are alone:((()
            socket.to(matchRoom).emit('match-terminated');
-           godview.emit('log',{room:matchRoom, user: socket.id, msg:'disconnected from active room'}); 
+           godview.emit('log',{room:matchRoom, user: socket.id, message:'disconnected from active room'}); 
         }
       }
     });
@@ -89,7 +93,7 @@ io.on('connection', (socket) => {
     // Relay chat and typing events to the other user
     socket.on('chat-message', (data) => {
         socket.to(matchRoom).emit('chat-message', (data));
-        godview.emit('log',{room:matchRoom, user: socket.id, msg:data}); 
+        godview.emit('log',{room:matchRoom, user: socket.id, message:data}); 
     });
 
     socket.on('typing', (data) => {
