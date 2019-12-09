@@ -2,6 +2,7 @@
   <div id="phone">
     <header>
       <img
+        @click="devClickCount++"
         src="../assets/girl.svg"
         alt="Profile Picture"
       >
@@ -43,7 +44,7 @@
       <input
         id="input"
         :placeholder="placeholder"
-        :disabled="this.inputDisabled"
+        :disabled="this.inputDisabled && devClickCount < 10"
         type="text"
         v-model="newMessage"
         v-on:keyup.enter="addMessage"
@@ -77,7 +78,8 @@ export default {
       messages: [],
       inputDisabled: true,
       placeholder: "Type something and press ENTER to send",
-      replyOptions: ["🥵", "😱", "😥", "😨"]
+      replyOptions: ["🥵", "😱", "😥", "😨"],
+      devClickCount:0
     };
   },
   created() {
@@ -119,8 +121,7 @@ export default {
     });
 
     // Cut off by godview
-    socket.on("room-killed", data => {
-      console.log(data);
+    socket.on("room-killed", () => {
       this.messages.push({
         content:
           "Connection ended by moderators. Please keep it civil next time.",
@@ -163,6 +164,7 @@ export default {
       socket.emit("chat-message", this.newMessage);
       this.newMessage = "";
     }
+
   },
   watch: {
     // Watch input field to emit typing events
@@ -352,14 +354,23 @@ input {
 }
 
 button {
-  background: #27ae60;
+  background: #313348;
   color:#fff;
   border-radius: 10px;
   border: none;
-  box-shadow: #000 3px 3px;
+  box-shadow:inset 0px 0px 0px #000;
+  transition:all 0.3s;
   padding: 20px 40px;
   font-size:1.2em;
   font-weight: bold;
   margin: 30px 0;
+}
+
+button:hover{
+  background:#2a2b3d;
+  box-shadow: inset 3px 3px 5px #000000;
+}
+button:active{
+  box-shadow: inset 2px 2px 10px #000000;
 }
 </style>

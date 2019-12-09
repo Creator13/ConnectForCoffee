@@ -4,14 +4,19 @@
       <b>godview</b> |  total connections: {{totalConnections}}
     </header>
     <div class="chats">
-       <section class="chat" v-for="(room,key) in rooms" :key="key">
+       <section class="card" v-for="(room,key,index) in rooms" :key="key">
       <header>
-        <h1>Room {{key}}</h1>
-        <button @click="killRoom(key)">X</button>
+        <h1>Room #{{index}} ({{room.players.length}}/2)</h1>
+        <button class="emoji-button" @click="killRoom(key)">🚫</button>
         </header>
-      <p>users: <span v-for="player in room.players" :key="player">{{player}} </span></p>
-      <div class="log">
-        <p v-for="(logItem,key) in room.log" :key="key"><b>{{ logItem.user }}:</b> {{logItem.msg}}</p>
+
+      <div class="messages-container">
+
+        <div class="messages">
+          <span v-for="(logItem,key) in room.log" :key="key"
+           :class="(logItem.user == room.players[0] ? 'ours' : logItem.user=='system' ? 'system' : 'theirs' )"
+          >{{logItem.message}}</span>
+        </div>
       </div>
     </section> 
     </div>
@@ -40,8 +45,8 @@ export default {
   },
   methods:{
     killRoom(id){
-      console.log('kill room '+id)
       socket.emit('kill-room',id);
+      this.rooms[id].log.push({user:'system',message:'Room killed'})
     }
   },
   mounted(){
@@ -56,13 +61,17 @@ export default {
          log:[]
        })
      }
+
+     this.totalConnections++;
     });
+  
     
     socket.on('log', (data) => {
      if(data.room in this.rooms){
-       this.rooms[data.room].log.push(data)
+       this.rooms[data.room].log.push(data);
      }else{
        console.error('client out of sync')
+       console.log(data);
      }
     });
   }
@@ -79,19 +88,18 @@ html, body, #app {
   height: 100%;
   margin: 0;
   padding: 0;
-  background: #f9f9f9;
   top:0;
   left:0;
 }
 
 #app{
-  background:#2e4052;
+  background:#2a2b3d;
   color:#fff;
   padding: 30px;
   padding-top:80px;
 }
 header.title{
-  background:#000f08;
+  background:#252636;
   padding: 20px;
   top:0;
   left:0;
@@ -100,21 +108,71 @@ header.title{
 }
 .chats{
   display:grid;
-    grid-template-columns:1fr 1fr 1fr 1fr;
+    grid-template-columns:1fr 1fr 1fr;
     grid-gap: 30px;
 }
-.chat{
+.card{
   box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-  background:#141414;
+  background:#313348;
 }
-.chat header{
-  background:#25283d;
+.card header{
+  background:#252636;
   padding:10px;
   font-size:0.7em;
+  width:100%;
 }
-.chat .log{
-  padding:10px;
-max-height: 300px;
-overflow: scroll;
+.card header h1{
+  display: inline-block;
+}
+button{
+  font-size:2.2em;
+  background: #313348;
+  border:none;
+  border-radius: 5px;
+  box-shadow: 1px 1px 2px #000;
+  transition:all 0.3s;
+}
+button:hover{
+  background:#2a2b3d;
+  box-shadow: inset 1px 1px 2px #000000;
+}
+button:active{
+  box-shadow: inset 2px 2px 10px #000000;
+}
+.card header button{
+  float: right;
+}
+
+
+.messages-container{
+  height:300px;
+  overflow: scroll;
+  padding: 20px;   
+}
+.messages{
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  overflow-wrap: break-word;
+}
+.messages span {
+  background: #ebeaeb;
+  color: #000;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 16px;
+  max-width: 60%;
+}
+.ours {
+  align-self: flex-end;
+}
+.system,
+.disclaimer {
+  align-self: center;
+  text-align: center;
+  font-size: 0.8em;
+  font-weight: bold;
 }
 </style>
