@@ -69,7 +69,6 @@ io.on('connection', (socket) => {
       }
     });
 
-
     // Relay chat and typing events to the other user
     socket.on('chat-message', (data) => {
         socket.to(matchRoom).emit('chat-message', (data));
@@ -77,11 +76,11 @@ io.on('connection', (socket) => {
     });
 
     socket.on('typing', (data) => {
-        socket.broadcast.emit('typing', true);
+        socket.to(matchRoom).emit('typing', true);
     });
 
     socket.on('stopTyping', () => {
-        socket.broadcast.emit('stopTyping');
+        socket.to(matchRoom).emit('stopTyping');
     });
 
 });
