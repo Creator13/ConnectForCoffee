@@ -1,8 +1,5 @@
-node_modules
-server/node_modules
-/whoisit/node_modules
-
 .DS_Store
+node_modules
 /dist
 
 # local env files

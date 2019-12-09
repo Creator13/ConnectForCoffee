@@ -1,0 +1,31 @@
+{
+  "name": "hybridwifi-server",
+  "version": "0.0.69",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "serve": "nodemon --exec babel-node index.js "
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Creator13/HybridWiFi.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Creator13/HybridWiFi/issues"
+  },
+  "homepage": "https://github.com/Creator13/HybridWiFi#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.7.5",
+    "@babel/core": "^7.7.5",
+    "@babel/node": "^7.7.4",
+    "@babel/preset-env": "^7.7.6",
+    "nodemon": "^2.0.1"
+  }
+}
