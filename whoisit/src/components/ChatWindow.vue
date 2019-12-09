@@ -118,6 +118,19 @@ export default {
       this.otherIsTyping = false;
     });
 
+    // Cut off by godview
+    socket.on("room-killed", data => {
+      console.log(data);
+      this.messages.push({
+        content:
+          "Connection ended by moderators. Please keep it civil next time.",
+        user: 3
+      });
+      window.onbeforeunload = undefined;
+      this.inputDisabled = true;
+      this.otherIsTyping = false;
+    });
+
     socket.on("typing", () => {
       this.otherIsTyping = true;
     });

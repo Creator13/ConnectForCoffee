@@ -7,6 +7,7 @@
        <section class="chat" v-for="(room,key) in rooms" :key="key">
       <header>
         <h1>Room {{key}}</h1>
+        <button @click="killRoom(key)">X</button>
         </header>
       <p>users: <span v-for="player in room.players" :key="player">{{player}} </span></p>
       <div class="log">
@@ -35,6 +36,12 @@ export default {
      totalConnections:0,
      rooms:{
      }
+    }
+  },
+  methods:{
+    killRoom(id){
+      console.log('kill room '+id)
+      socket.emit('kill-room',id);
     }
   },
   mounted(){

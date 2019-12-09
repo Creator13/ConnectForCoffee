@@ -14,7 +14,19 @@ console.log('Listening on port' + port);
 app.use(express.static(path.join(__dirname, '../whoisit/dist')));
 
 let openRooms = [] // Open room is a room with only 1 player :(
-const godview = io.of('/godview'); // Namespace for all access view
+let godview = io.of('/godview'); // Namespace for all access view
+
+// Watch godview connection and give ability to kill a room
+godview.on('connection',(socket) =>{
+    socket.on('kill-room', (roomId) => {
+        console.log('kill room '+roomId);
+        
+        io.in(roomId).emit('room-killed', (roomId));
+        io.sockets.clients(roomId).forEach((player) => {
+            player.leave(roomId);
+        });
+    });
+})
 
 io.on('connection', (socket) => {
 
