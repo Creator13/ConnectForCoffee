@@ -21,9 +21,14 @@ godview.on('connection',(socket) =>{
     socket.on('kill-room', (roomId) => {
         console.log('kill room '+roomId);
         
-        io.in(roomId).emit('room-killed', (roomId));
-        io.sockets.clients(roomId).forEach((player) => {
-            player.leave(roomId);
+    io.in(roomId).emit('room-killed', (roomId));
+        io.in(roomId).clients((error, clients) => {
+            if(error)
+                console.log(error)
+
+            for(let client of clients){
+                io.sockets.connected[client].leave(roomId)
+            }
         });
     });
 })
