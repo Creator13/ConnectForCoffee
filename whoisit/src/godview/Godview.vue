@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <header class="title">
-      <b>godview</b> |  total connections: {{totalConnections}}
+      <b>birdseye</b> |  total connections: {{totalConnections}}
     </header>
     <div class="chats">
        <section class="card" v-for="(room,key,index) in rooms" :key="key">
