@@ -37,7 +37,7 @@
         </p>
         <button @click="joinRoom">Find a friend</button>
 
-        <p class="disclaimer">Your messaged will be logged for safety</p>
+        <p class="disclaimer">Your messages will be logged for safety purposes</p>
       </div>
     </section>
     <footer>
@@ -260,7 +260,7 @@ input {
   display: none;
 }
 #scroll {
-  overflow: scroll;
+  overflow-y: auto;
   scroll-behavior: smooth;
 }
 
