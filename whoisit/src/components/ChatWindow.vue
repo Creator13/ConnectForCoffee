@@ -94,9 +94,9 @@ export default {
         user: 3
       });
       this.inputDisabled = false;
-      // window.onbeforeunload = function() {
-      //   return "Do you really want to leave? You are still in a conversation with a stranger!";
-      // };
+      window.onbeforeunload = function() {
+        return "Do you really want to leave? You are still in a conversation with a stranger!";
+      };
     });
 
     // When other person sends a message
