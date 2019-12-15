@@ -1,4 +1,4 @@
-Do you have [COLOUR] hair?
+Do you have [HAIR COLOUR] hair?
 Do you have dyed hair?
 Do you have facial hair?
 Do you have long hair?

@@ -1,16 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 
-class Question {
-    constructor(text) {
-        this.text = text;
-        this.used = false;
-        this.hasOptions = text.m
-    }
-}
-
-const NO_QUESTION = new Question("empty");
-
 function loadFile(filename) {
     const filepath = path.join(__dirname, `static/${filename}`)
     // Load the file
@@ -27,9 +17,11 @@ function loadFile(filename) {
 }
 
 function getQuestions() {
-    let makeQuestions = (line) => {
+    let makeQuestions = (array) => {
         let questions = [];
-        questions.push(new Question(line));
+        array.forEach((line) => {
+            questions.push(new Question(line));
+        });
         return questions;
     }
 
@@ -47,23 +39,54 @@ function randomSelect(array, n = 1) {
         throw `Cannot select less than 1 element`;
     }
 
+    let unusedQuestions = array.filter(q => !q.used);
+
     // Generate n unique random numbers
     let randomIndexes = [];
     while (randomIndexes.length < n) {
-        let num = Math.floor(Math.random() * array.length);
+        let num = Math.floor(Math.random() * unusedQuestions.length);
 
-        if (!randomIndexes.includes(num)) {
-            randomIndexes.push(num);
-        }
+        if (randomIndexes.includes(num)) continue;
+        if (array[num].used) continue;
+
+        randomIndexes.push(num);
     }
 
     // Select the elements from the given array at each random index
     let selection = [];
     randomIndexes.forEach((i) => {
-        selection.push(array[i]);
+        selection.push(unusedQuestions[i]);
     });
 
     return selection;
+}
+
+class Question {
+    constructor(text) {
+        this.text = text;
+        this.used = false;
+
+        let regex = /\[[A-Z ]*\]/
+        this.hasOptions = regex.test(text);
+        
+        if (this.hasOptions) {
+            // convert variable in question from form [VARIABLE NAME] to variable-name
+            let optionFileName = this.text.match(regex)[0];
+            optionFileName = optionFileName.replace(/\[|\]/g, '').replace(/ /, '-').toLowerCase();
+
+            // Load the file static/options/variable-name.txt
+            try {
+                this.options = loadFile(`options/${optionFileName}.txt`);
+            }
+            catch (err) {
+                console.error(`No options file found for ${optionFileName}. ("${this.text}")`);
+            }
+        }
+    }
+
+    use() {
+        this.used = true;
+    }
 }
 
 class QuestionPooler {
@@ -79,23 +102,42 @@ class QuestionPooler {
                 questions: getQuestions()
             });
         }
-
     }
 
     getNewQuestions(playerIndex) {
-        if (playerIndex >= this.players) {
+        if (playerIndex >= this.players || playerIndex < 0 || playerIndex == undefined) {
             throw `playerIndex ${playerIndex} was out of range. Player count: ${this.players}.`;
         }
 
         let currentPool = this.pools[playerIndex];
 
-        randomSelect(currentPool.questions.appearance, 3);
+        return randomSelect(currentPool.questions.appearance, 3);
+    }
+
+    getAll(playerIndex) {
+        if (playerIndex >= this.players || playerIndex < 0 || playerIndex == undefined) {
+            throw `playerIndex ${playerIndex} was out of range. Player count: ${this.players}.`;
+        }
+
+        return this.pools[playerIndex].questions;
     }
 }
+
+const NO_QUESTION = new Question("empty");
 
 module.exports = {
     Pooler: QuestionPooler,
     NO_QUESTION: NO_QUESTION
 }
 
-let qp = new QuestionPooler();
+////// EXAMPLE CODE: //////
+
+// let qp = new QuestionPooler();
+
+// for (let i = 0; i < 10; i++) {
+//     let qs = qp.getNewQuestions(0);
+//     qs[1].use();
+//     console.log(`used question "${qs[1].text}"`);
+// }
+
+// console.log(qp.getAll(0).appearance[0].options);

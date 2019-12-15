@@ -23,4 +23,5 @@ yarn-error.log*
 *.sln
 *.sw?
 
+# Local config files
 **/.eslintrc.json
