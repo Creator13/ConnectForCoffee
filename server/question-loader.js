@@ -27,7 +27,7 @@ function getQuestions() {
 
     return {
         appearance: makeQuestions(loadFile('appearance.txt')),
-        interest: makeQuestions(loadFile('interests.txt'))
+        interests: makeQuestions(loadFile('interests.txt'))
     }
 }
 
@@ -41,13 +41,14 @@ function randomSelect(array, n = 1) {
 
     let unusedQuestions = array.filter(q => !q.used);
 
+    n = unusedQuestions.length < n ? unusedQuestions.length : n;
+
     // Generate n unique random numbers
     let randomIndexes = [];
     while (randomIndexes.length < n) {
         let num = Math.floor(Math.random() * unusedQuestions.length);
 
         if (randomIndexes.includes(num)) continue;
-        if (array[num].used) continue;
 
         randomIndexes.push(num);
     }
@@ -111,7 +112,7 @@ class QuestionPooler {
 
         let currentPool = this.pools[playerIndex];
 
-        return randomSelect(currentPool.questions.appearance, 3);
+        return randomSelect(currentPool.questions.interests, 3);
     }
 
     getAll(playerIndex) {
@@ -134,10 +135,14 @@ module.exports = {
 
 // let qp = new QuestionPooler();
 
-// for (let i = 0; i < 10; i++) {
+// for (let i = 0; i < 20; i++) {
 //     let qs = qp.getNewQuestions(0);
-//     qs[1].use();
-//     console.log(`used question "${qs[1].text}"`);
+//     console.log(`${i}: Got ${qs.length} questions back`);
+    
+//     if (qs.length <= 0) break;
+
+//     qs[0].use();
+//     console.log(`used question "${qs[0].text}"`);
 // }
 
 // console.log(qp.getAll(0).appearance[0].options);
