@@ -1,0 +1,38 @@
+Do you have [COLOUR] hair?
+Do you have dyed hair?
+Do you have facial hair?
+Do you have long hair?
+Do you have short hair?
+Do you have curly hair?
+Do you have straight hair?
+Are you wearing a hat?
+Are you wearing a scarf?
+Are you wearing a jacket?
+Are you wearing a hoodie?
+Do you have a backpack with you?
+Do you have a travel bag with you?
+Are you wearing a skirt?
+Are you wearing something formal?
+Are you wearing a [COLOUR] item of clothing?
+Are you wearing [COLOUR] shoes?
+Do you have [COLOUR] eyes?
+Do you have any tattoos?
+Do you have piercings?
+Are you taller than [HEIGHT]?
+Are you shorter than [HEIGHT]?
+Are you wearing glasses?
+Are you wearing sunglasses?    
+Are you male-presenting?
+Are you female-presenting?
+Are you gender non conforming?.
+Are you wearing Headphones?
+Are you wearing earbuds?
+Do you have a phone case?
+Do you have an iPhone?
+Are you standing?
+Are you sitting?
+Are you walking around?
+Are you near the VR space?
+Are you near the teacher room?
+Are you eating right now?
+Are you drinking something right now?
