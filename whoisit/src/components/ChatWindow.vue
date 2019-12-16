@@ -23,16 +23,16 @@
         <span class="message ours"
           v-for="option in replyOptions"
           :key="option"
-          @click="chooseReply(option,false)"
+          @click="answerQuestion(option)"
         >{{option}}</span>
       </span>
 
       <span class="reply-selector questions"  v-if="questionOpen">
         <span class="message ours"
           v-for="option in questionOptions"
-          :key="option"
-          @click="chooseReply(option,true)"
-        >{{option}}</span>
+          :key="option.text"
+          @click="chooseQuestion(option)"
+        >{{option.text }}</span>
       </span>
 
         <span
@@ -66,13 +66,13 @@
         v-model="newMessage"
         v-on:keyup.enter="addMessage"
       />
-      <div class="question-selector">
+      <!-- <div class="question-selector">
         <span class="message ours"
           v-for="option in replyOptions"
           :key="option"
-          @click="chooseReply(option)"
+          @click="chooseQuestion(option)"
         >{{option}}</span>
-      </div>
+      </div> -->
     </footer>
 
   </div>
@@ -81,10 +81,12 @@
 <script>
 import io from "socket.io-client";
 
+console.log(process.env.NODE_ENV);
 let serverURI =
   process.env.NODE_ENV === "development"
     ? window.location.hostname + ":8080"
     : window.location.host;
+  console.log(serverURI)
 let socket = io.connect(serverURI);
 
 export default {
@@ -124,14 +126,33 @@ export default {
     });
 
     // When other person sends a message
-    socket.on("chat-message", data => {
+    socket.on("chat-message", message => {
+       if(!this.replyOptions.includes(message)){
+          // If not not a reply, it's a question, so show reply
+         this.replyOpen = true;
+        // message = message.text;
+       }
+        
       this.messages.push({
-        content: data,
+        content: message,
         user: 2
       });
-   //   this.drawerOpen = true;
-      this.replyOpen = true;
+
     });
+
+   // When other person sends a message
+    socket.on("question-prompt", data => {
+      console.log('prompt:' ,data)
+  //     this.messages.push({
+  //       content: data,
+  //       user: 2
+  //     });
+  //  //   this.drawerOpen = true;
+  //     this.replyOpen = true;
+      this.questionOptions = data;
+      this.questionOpen = true;
+    });
+
 
     // Match lost conection :(
     socket.on("match-terminated", data => {
@@ -192,21 +213,33 @@ export default {
       this.inputDisabled = true;
       this.replyOpen = false;
 
+
+    },
+
+    answerQuestion(answer){
+        this.newMessage = answer;
+        this.addMessage();
+
+        socket.emit("question-answered", this.newMessage);
+        this.replyOpen = false;
     },
     
-    chooseReply(option, needsText = false){
-        this.newMessage = option;
-      if(needsText){
+    chooseQuestion(question){
+      this.newMessage = question.text;
+      this.questionOpen = false;
 
-        this.questionOpen = false;
+      if(question.hasOptions){
+
         this.inputDisabled = false;
         document.getElementById("input").focus();
+        
       }else{
 
         this.addMessage();
-        this.questionOpen = true;
-        this.replyOpen = false;
+      
       }
+
+      socket.emit('use-question', question)
 
     }
 
