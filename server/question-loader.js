@@ -106,7 +106,8 @@ class QuestionPooler {
     }
 
     getNewQuestions(playerIndex, n = 3) {
-        if (playerIndex >= this.players || playerIndex < 0 || playerIndex == undefined) {
+        playerIndex = parseInt(playerIndex);
+        if (playerIndex >= this.players || playerIndex < 0 || playerIndex === undefined) {
             throw `playerIndex ${playerIndex} was out of range. Player count: ${this.players}.`;
         }
 

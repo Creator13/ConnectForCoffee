@@ -6,11 +6,6 @@ let io = require('socket.io')(server);
 let path = require('path');
 let questions = require('./question-loader.js');
 
-
-()=>{
-    
-}
-
 // Set up port
 let port = process.env.PORT || 8080;
 server.listen(port, () => {
@@ -57,10 +52,11 @@ godview.on('connection', (socket) => {
 
 io.on('connection', (socket) => {
     let matchRoom = ''; // the room this socket is connected to
+    let positionInRoom = -1;
 
     let sendQuestions = () => {
         let room = activeRooms[activeRoomIndex(matchRoom)];
-        questions = room.pooler.getNewQuestions();
+        questions = room.pooler.getNewQuestions(positionInRoom === 1 ? 0 : 1);
         socket.in(matchRoom).emit('question-prompt', questions);
     }
 
@@ -78,6 +74,9 @@ io.on('connection', (socket) => {
                 pooler: new questions.Pooler(2)
             });
 
+            // position in room is 0; they are the first person to join the room
+            positionInRoom = 1;
+
             // Start the first question
             sendQuestions();
 
@@ -90,6 +89,9 @@ io.on('connection', (socket) => {
             // Generate random string for new room
             let newRoom = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
             openRooms.push(newRoom);
+
+            // position in room is 0; they are the first person to join the room
+            positionInRoom = 0;
 
             socket.join(newRoom)
             matchRoom = newRoom;
@@ -136,7 +138,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('question-answered', (answer) => {
-        sendQuestions();
+        sendQuestions(!positionInRoom);
     })
 
     // Relay chat and typing events to the other user
