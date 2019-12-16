@@ -11,7 +11,7 @@
     <section id="scroll">
       <div
         id="messages-window"
-        v-if="messages.length>0"
+        v-if="messages.length>0 || devClickCount > 1"
       >
         <span
           :class="'message ' + (message.user==1 ? 'ours' : message.user==2 ? 'theirs' : 'system' )"
@@ -40,19 +40,20 @@
         <p class="disclaimer">Your messages will be logged for safety purposes</p>
       </div>
     </section>
-    <footer>
+    <footer :class="drawerOpen? 'open' :''">
       <input
         id="input"
         :placeholder="placeholder"
-        :disabled="this.inputDisabled && devClickCount < 10"
+        :disabled="this.inputDisabled && devClickCount < 2"
         type="text"
         v-model="newMessage"
         v-on:keyup.enter="addMessage"
       />
       <div class="reply-options">
-        <span
+        <span class="message ours"
           v-for="option in replyOptions"
           :key="option"
+          @click="chooseReply(option)"
         >{{option}}</span>
       </div>
     </footer>
@@ -78,8 +79,9 @@ export default {
       messages: [],
       inputDisabled: true,
       placeholder: "Type something and press ENTER to send",
-      replyOptions: ["🥵", "😱", "😥", "😨"],
-      devClickCount:0
+      replyOptions: ["Seksuele sfeer met jou <3", "Antropologisch verantwoord onderzoek naar mijn liefde voor koffie", "😥", "Hoezo leven we"],
+      devClickCount:0,
+      drawerOpen:false
     };
   },
   created() {
@@ -105,6 +107,7 @@ export default {
         content: data,
         user: 2
       });
+      this.drawerOpen = true;
     });
 
     // Match lost conection :(
@@ -163,6 +166,15 @@ export default {
       this.messages.push({ user: 1, content: this.newMessage });
       socket.emit("chat-message", this.newMessage);
       this.newMessage = "";
+      this.inputDisabled = true;
+      this.drawerOpen = false;
+    },
+    
+    chooseReply(option){
+      console.log(option);
+      this.newMessage = option;
+      this.inputDisabled = false;
+       document.getElementById("input").focus();
     }
 
   },
@@ -240,12 +252,16 @@ footer {
   transition: height 0.3s;
   height: 60px;
 }
-footer:hover {
-  // height: 300px;
+footer.open{
+   height: 300px;
 }
 .reply-options {
-  font-size: 60px;
-  margin-top: 30px;
+  text-align: center;
+  margin: 10px;
+}
+.reply-options span{
+  display: block;
+  margin:8px auto;
 }
 input {
   border-radius: 15px;
@@ -279,6 +295,7 @@ input {
   margin-bottom: 8px;
   border-radius: 16px;
   max-width: 70%;
+  font-size: 16px;
 }
 .ours {
   background: #0076ff;
