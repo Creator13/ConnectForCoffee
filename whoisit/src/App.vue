@@ -25,7 +25,7 @@ html, body, #app {
   height: 100%;
   margin: 0;
   padding: 0;
-  background: #f9f9f9;
+  background: #a8755e;
   top:0;
   left:0;
 }
