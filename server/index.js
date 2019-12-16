@@ -4,9 +4,7 @@ let app = express();
 let server = require('http').Server(app);
 let io = require('socket.io')(server);
 let path = require('path');
-let loader = require('./question-loader.js');
-
-let newPool = new loader.Pooler();
+let questions = require('./question-loader.js');
 
 // Set up port
 let port = process.env.PORT || 8080;
@@ -17,7 +15,19 @@ server.listen(port, () => {
 // Set up static file server (front-end dist folder)
 app.use(express.static(path.join(__dirname, '../whoisit/dist')));
 
-let openRooms = [] // Open room is a room with only 1 player :(
+let activeRooms = [];
+let openRooms = []; // Open room is a room with only 1 player :(
+
+function activeRoomIndex(roomId) {
+    for (let i = 0; i < activeRooms.length; i++) {
+        if (activeRooms[i].room_id == roomId) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
 let godview = io.of('/godview'); // Namespace for all access view
 
 // Watch godview connection and give ability to kill a room
@@ -38,10 +48,16 @@ godview.on('connection', (socket) => {
             }
         });
     });
-})
+});
 
 io.on('connection', (socket) => {
     let matchRoom = ''; // the room this socket is connected to
+
+    let sendQuestions = () => {
+        let room = activeRooms[activeRoomIndex(matchRoom)];
+        questions = room.pooler.getNewQuestions();
+        socket.in(matchRoom).emit('question-prompt', questions);
+    }
 
     socket.on('join-room', () => {
         // If someone is waiting for a match, put our new connection in this room
@@ -50,9 +66,18 @@ io.on('connection', (socket) => {
             socket.join(openRoom);
             matchRoom = openRoom;
 
+            // Create a new active room
+            activeRooms.push({
+                room_id: matchRoom,
+                currentRound: 0,
+                pooler: new questions.Pooler(2)
+            });
+
+            // Start the first question
+            sendQuestions();
+
             socket.in(matchRoom).emit('match-made', matchRoom);
             socket.emit('match-made', matchRoom);
-
         }
         else {
             console.log('New connection. No players in queue, putting in queue:')
@@ -77,7 +102,7 @@ io.on('connection', (socket) => {
         if (matchRoom !== '') {
             let index = openRooms.indexOf(matchRoom);
 
-            // If player was in open room (c.q. still alone), no worries
+            // If player was in open room (c.q. still alone), no worries 
             // just remove it from open rooms list
             if (index >= 0) {
                 openRooms.splice(index, 1);
@@ -86,8 +111,8 @@ io.on('connection', (socket) => {
                     user: socket.id,
                     message: 'disconnected from waiting room'
                 });
-            } else {
-
+            }
+            else {
                 // let other user know they are alone:((()
                 socket.to(matchRoom).emit('match-terminated');
                 godview.emit('log', {
@@ -95,9 +120,19 @@ io.on('connection', (socket) => {
                     user: socket.id,
                     message: 'disconnected from active room'
                 });
+
+                // Room is no longer active once a player leaves
+                let index = activeRoomIndex(matchRoom);
+                if (index >= 0) {
+                    activeRooms.splice(index, 1);
+                }
             }
         }
     });
+
+    socket.on('question-answered', (answer) => {
+        sendQuestions();
+    })
 
     // Relay chat and typing events to the other user
     socket.on('chat-message', (data) => {

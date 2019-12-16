@@ -105,14 +105,14 @@ class QuestionPooler {
         }
     }
 
-    getNewQuestions(playerIndex) {
+    getNewQuestions(playerIndex, n = 3) {
         if (playerIndex >= this.players || playerIndex < 0 || playerIndex == undefined) {
             throw `playerIndex ${playerIndex} was out of range. Player count: ${this.players}.`;
         }
 
         let currentPool = this.pools[playerIndex];
 
-        return randomSelect(currentPool.questions.interests, 3);
+        return randomSelect(currentPool.questions.interests, n);
     }
 
     getAll(playerIndex) {
@@ -137,6 +137,7 @@ module.exports = {
 
 // for (let i = 0; i < 20; i++) {
 //     let qs = qp.getNewQuestions(0);
+//     console.log(qs);
 //     console.log(`${i}: Got ${qs.length} questions back`);
     
 //     if (qs.length <= 0) break;
