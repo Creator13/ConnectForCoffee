@@ -57,7 +57,12 @@ io.on('connection', (socket) => {
     let sendQuestions = (playerIndex) => {
         let room = activeRooms[activeRoomIndex(matchRoom)];
         let questions = room.pooler.getNewQuestions(playerIndex);
-        socket.in(matchRoom).emit('question-prompt', questions);
+        if (playerIndex == positionInRoom) {
+            socket.emit('question-prompt', questions);
+        }
+        else {
+            socket.in(matchRoom).emit('question-prompt', questions);
+        }
     }
 
     socket.on('join-room', () => {
