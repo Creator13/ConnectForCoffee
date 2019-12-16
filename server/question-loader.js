@@ -127,10 +127,8 @@ class QuestionPooler {
 
 const NO_QUESTION = new Question("empty");
 
-module.exports = {
-    Pooler: QuestionPooler,
-    NO_QUESTION: NO_QUESTION
-}
+module.exports.Pooler = QuestionPooler;
+module.exports.NO_QUESTION = NO_QUESTION;
 
 ////// EXAMPLE CODE: //////
 

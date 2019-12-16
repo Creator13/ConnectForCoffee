@@ -54,9 +54,9 @@ io.on('connection', (socket) => {
     let matchRoom = ''; // the room this socket is connected to
     let positionInRoom = -1;
 
-    let sendQuestions = () => {
+    let sendQuestions = (playerIndex) => {
         let room = activeRooms[activeRoomIndex(matchRoom)];
-        questions = room.pooler.getNewQuestions(positionInRoom === 1 ? 0 : 1);
+        let questions = room.pooler.getNewQuestions(playerIndex);
         socket.in(matchRoom).emit('question-prompt', questions);
     }
 
@@ -78,7 +78,7 @@ io.on('connection', (socket) => {
             positionInRoom = 1;
 
             // Start the first question
-            sendQuestions();
+            sendQuestions(positionInRoom === 1 ? 0 : 1);
 
             socket.in(matchRoom).emit('match-made', matchRoom);
             socket.emit('match-made', matchRoom);
@@ -138,7 +138,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('question-answered', (answer) => {
-        sendQuestions(!positionInRoom);
+        sendQuestions(positionInRoom);
     })
 
     // Relay chat and typing events to the other user
