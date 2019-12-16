@@ -3,24 +3,41 @@
     <header>
       <img
         @click="devClickCount++"
-        src="../assets/girl.svg"
+        src="../assets/coffee.svg"
         alt="Profile Picture"
       >
-      <span>Make A Friend</span>
+      <span>Connect for Coffee</span>
     </header>
     <section id="scroll">
       <div
         id="messages-window"
-        v-if="messages.length>0"
+        v-if="messages.length>0 || devClickCount > 1"
       >
         <span
           :class="'message ' + (message.user==1 ? 'ours' : message.user==2 ? 'theirs' : 'system' )"
           v-for="(message,index) in messages"
           :key="index"
         >{{message.content}}</span>
+
+      <span class="reply-selector"  v-if="replyOpen">
+        <span class="message ours"
+          v-for="option in replyOptions"
+          :key="option"
+          @click="chooseReply(option,false)"
+        >{{option}}</span>
+      </span>
+
+      <span class="reply-selector questions"  v-if="questionOpen">
+        <span class="message ours"
+          v-for="option in questionOptions"
+          :key="option"
+          @click="chooseReply(option,true)"
+        >{{option}}</span>
+      </span>
+
         <span
           class="message typing-indicator"
-          v-if="this.otherIsTyping"
+          v-if="otherIsTyping"
         >
           <span></span>
           <span></span>
@@ -37,22 +54,23 @@
         </p>
         <button @click="joinRoom">Find a friend</button>
 
-        <p class="disclaimer">Your messaged will be logged for safety</p>
+        <p class="disclaimer">Your messages will be logged for safety purposes</p>
       </div>
     </section>
-    <footer>
+    <footer :class="drawerOpen? 'open' :''">
       <input
         id="input"
         :placeholder="placeholder"
-        :disabled="this.inputDisabled && devClickCount < 10"
+        :disabled="this.inputDisabled && devClickCount < 2"
         type="text"
         v-model="newMessage"
         v-on:keyup.enter="addMessage"
       />
-      <div class="reply-options">
-        <span
+      <div class="question-selector">
+        <span class="message ours"
           v-for="option in replyOptions"
           :key="option"
+          @click="chooseReply(option)"
         >{{option}}</span>
       </div>
     </footer>
@@ -78,8 +96,12 @@ export default {
       messages: [],
       inputDisabled: true,
       placeholder: "Type something and press ENTER to send",
-      replyOptions: ["🥵", "😱", "😥", "😨"],
-      devClickCount:0
+      replyOptions: ["Yes","No","Unsure"],
+      questionOptions: ["wil je zoenen met mij?","heb je een mooi hoofd?","heeft het leven zin/?","hoeveel zout moet er in?"],
+      devClickCount:0,
+      drawerOpen:false,
+      replyOpen: false,
+      questionOpen:false
     };
   },
   created() {
@@ -94,9 +116,11 @@ export default {
         user: 3
       });
       this.inputDisabled = false;
-      window.onbeforeunload = function() {
-        return "Do you really want to leave? You are still in a conversation with a stranger!";
-      };
+      if( process.env.NODE_ENV !== "development"){
+        window.onbeforeunload = function() {
+          return "Do you really want to leave? You are still in a conversation with a stranger!";
+        };
+      }
     });
 
     // When other person sends a message
@@ -105,6 +129,8 @@ export default {
         content: data,
         user: 2
       });
+   //   this.drawerOpen = true;
+      this.replyOpen = true;
     });
 
     // Match lost conection :(
@@ -163,6 +189,25 @@ export default {
       this.messages.push({ user: 1, content: this.newMessage });
       socket.emit("chat-message", this.newMessage);
       this.newMessage = "";
+      this.inputDisabled = true;
+      this.replyOpen = false;
+
+    },
+    
+    chooseReply(option, needsText = false){
+        this.newMessage = option;
+      if(needsText){
+
+        this.questionOpen = false;
+        this.inputDisabled = false;
+        document.getElementById("input").focus();
+      }else{
+
+        this.addMessage();
+        this.questionOpen = true;
+        this.replyOpen = false;
+      }
+
     }
 
   },
@@ -240,13 +285,38 @@ footer {
   transition: height 0.3s;
   height: 60px;
 }
-footer:hover {
-  // height: 300px;
+footer.open{
+   height: 300px;
 }
-.reply-options {
-  font-size: 60px;
-  margin-top: 30px;
+.reply-selector{
+  align-self: flex-end;
+  margin-top:8px;
 }
+.reply-selector .sda .message{
+  align-self: flex-end;
+  margin-top:8px;
+}
+.reply-selector .message{
+ margin-left:10px;
+ background:#4d9fff;
+ &:hover{
+   background: #0076ff;
+ }
+}
+.reply-selector.questions .message{
+  display: block;
+  max-width: none;
+  text-align: center;
+}
+.question-selector {
+  text-align: center;
+  margin: 10px;
+}
+.question-selector span{
+  display: block;
+  margin:8px auto;
+}
+
 input {
   border-radius: 15px;
   height: 30px;
@@ -260,7 +330,7 @@ input {
   display: none;
 }
 #scroll {
-  overflow: scroll;
+  overflow-y: auto;
   scroll-behavior: smooth;
 }
 
@@ -279,6 +349,7 @@ input {
   margin-bottom: 8px;
   border-radius: 16px;
   max-width: 70%;
+  font-size: 16px;
 }
 .ours {
   background: #0076ff;

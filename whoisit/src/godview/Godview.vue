@@ -89,10 +89,10 @@ html, body, #app {
   padding: 0;
   top:0;
   left:0;
+    background:#2a2b3d;
 }
 
 #app{
-  background:#2a2b3d;
   color:#fff;
   padding: 30px;
   padding-top:80px;
