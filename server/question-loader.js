@@ -122,7 +122,14 @@ class QuestionPooler {
         }
 
         let currentPool = this.pools[playerIndex];
-        for (let q of currentPool.questions) {
+        for (let q of currentPool.questions.appearance) {
+            if (q == question) {
+                q.use();
+                return;
+            }
+        }
+
+        for (let q of currentPool.questions.interests) {
             if (q == question) {
                 q.use();
                 return;
