@@ -3,10 +3,10 @@
     <header>
       <img
         @click="devClickCount++"
-        src="../assets/girl.svg"
+        src="../assets/coffee.svg"
         alt="Profile Picture"
       >
-      <span>Make A Friend</span>
+      <span>Connect for Coffee</span>
     </header>
     <section id="scroll">
       <div
@@ -18,9 +18,26 @@
           v-for="(message,index) in messages"
           :key="index"
         >{{message.content}}</span>
+
+      <span class="reply-selector"  v-if="replyOpen">
+        <span class="message ours"
+          v-for="option in replyOptions"
+          :key="option"
+          @click="chooseReply(option,false)"
+        >{{option}}</span>
+      </span>
+
+      <span class="reply-selector questions"  v-if="questionOpen">
+        <span class="message ours"
+          v-for="option in questionOptions"
+          :key="option"
+          @click="chooseReply(option,true)"
+        >{{option}}</span>
+      </span>
+
         <span
           class="message typing-indicator"
-          v-if="this.otherIsTyping"
+          v-if="otherIsTyping"
         >
           <span></span>
           <span></span>
@@ -49,7 +66,7 @@
         v-model="newMessage"
         v-on:keyup.enter="addMessage"
       />
-      <div class="reply-options">
+      <div class="question-selector">
         <span class="message ours"
           v-for="option in replyOptions"
           :key="option"
@@ -79,9 +96,12 @@ export default {
       messages: [],
       inputDisabled: true,
       placeholder: "Type something and press ENTER to send",
-      replyOptions: ["Seksuele sfeer met jou <3", "Antropologisch verantwoord onderzoek naar mijn liefde voor koffie", "😥", "Hoezo leven we"],
+      replyOptions: ["Yes","No","Unsure"],
+      questionOptions: ["wil je zoenen met mij?","heb je een mooi hoofd?","heeft het leven zin/?","hoeveel zout moet er in?"],
       devClickCount:0,
-      drawerOpen:false
+      drawerOpen:false,
+      replyOpen: false,
+      questionOpen:false
     };
   },
   created() {
@@ -96,9 +116,11 @@ export default {
         user: 3
       });
       this.inputDisabled = false;
-      window.onbeforeunload = function() {
-        return "Do you really want to leave? You are still in a conversation with a stranger!";
-      };
+      if( process.env.NODE_ENV !== "development"){
+        window.onbeforeunload = function() {
+          return "Do you really want to leave? You are still in a conversation with a stranger!";
+        };
+      }
     });
 
     // When other person sends a message
@@ -107,7 +129,8 @@ export default {
         content: data,
         user: 2
       });
-      this.drawerOpen = true;
+   //   this.drawerOpen = true;
+      this.replyOpen = true;
     });
 
     // Match lost conection :(
@@ -167,14 +190,24 @@ export default {
       socket.emit("chat-message", this.newMessage);
       this.newMessage = "";
       this.inputDisabled = true;
-      this.drawerOpen = false;
+      this.replyOpen = false;
+
     },
     
-    chooseReply(option){
-      console.log(option);
-      this.newMessage = option;
-      this.inputDisabled = false;
-       document.getElementById("input").focus();
+    chooseReply(option, needsText = false){
+        this.newMessage = option;
+      if(needsText){
+
+        this.questionOpen = false;
+        this.inputDisabled = false;
+        document.getElementById("input").focus();
+      }else{
+
+        this.addMessage();
+        this.questionOpen = true;
+        this.replyOpen = false;
+      }
+
     }
 
   },
@@ -255,14 +288,35 @@ footer {
 footer.open{
    height: 300px;
 }
-.reply-options {
+.reply-selector{
+  align-self: flex-end;
+  margin-top:8px;
+}
+.reply-selector .sda .message{
+  align-self: flex-end;
+  margin-top:8px;
+}
+.reply-selector .message{
+ margin-left:10px;
+ background:#4d9fff;
+ &:hover{
+   background: #0076ff;
+ }
+}
+.reply-selector.questions .message{
+  display: block;
+  max-width: none;
+  text-align: center;
+}
+.question-selector {
   text-align: center;
   margin: 10px;
 }
-.reply-options span{
+.question-selector span{
   display: block;
   margin:8px auto;
 }
+
 input {
   border-radius: 15px;
   height: 30px;
