@@ -65,7 +65,7 @@ io.on('connection', (socket) => {
         }
     }
 
-    socket.on('use-question', data => {
+    socket.on('use-question', (data) => {
         let room = activeRoomIndex(matchRoom);
         room.pooler.useQuestion(data);
     });
@@ -146,8 +146,6 @@ io.on('connection', (socket) => {
             }
         }
     });
-
-    socket.on()
 
     socket.on('question-answered', (answer) => {
         sendQuestions(positionInRoom);
