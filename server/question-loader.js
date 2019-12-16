@@ -107,13 +107,27 @@ class QuestionPooler {
 
     getNewQuestions(playerIndex, n = 3) {
         playerIndex = parseInt(playerIndex);
-        if (playerIndex >= this.players || playerIndex < 0 || playerIndex === undefined) {
+        if (playerIndex >= this.players || playerIndex < 0 || playerIndex == undefined) {
             throw `playerIndex ${playerIndex} was out of range. Player count: ${this.players}.`;
         }
 
         let currentPool = this.pools[playerIndex];
 
-        return randomSelect(currentPool.questions.interests, n);
+        return randomSelect(currentPool.questions.appearance, n);
+    }
+
+    useQuestion(question, playerIndex) {
+        if (question == undefined) {
+            throw 'Question was undefined';
+        }
+
+        let currentPool = this.pools[playerIndex];
+        for (let q of currentPool.questions) {
+            if (q == question) {
+                q.use();
+                return;
+            }
+        }
     }
 
     getAll(playerIndex) {
@@ -129,6 +143,7 @@ const NO_QUESTION = new Question("empty");
 
 module.exports.Pooler = QuestionPooler;
 module.exports.NO_QUESTION = NO_QUESTION;
+module.exports.Question = Question;
 
 ////// EXAMPLE CODE: //////
 
