@@ -102,7 +102,8 @@ io.on('connection', (socket) => {
 
             activeRooms.push(room);
 
-            io.in(roomId).emit('starting-room', {
+            io.in(roomId).emit('match-made', {
+                roomId: roomId,
                 code: room.roomCode,
                 waiterId: socket.id
             });
@@ -112,9 +113,6 @@ io.on('connection', (socket) => {
 
             // Start the first question
             sendQuestions(positionInRoom === 1 ? 0 : 1);
-
-            socket.in(roomId).emit('match-made', roomId);
-            socket.emit('match-made', roomId);
 
             console.log(`Socket ${socket.id} joined room ${room.room_id}.`);
         }
