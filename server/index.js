@@ -107,8 +107,7 @@ io.on('connection', (socket) => {
     };
 
     socket.on('use-question', data => {
-        // TODO remove this
-        getRoom().pooler.useQuestion(data, '', positionInRoom);
+        getRoom().pooler.useQuestion(data, positionInRoom);
     });
 
     socket.on('join-room', () => {
@@ -201,8 +200,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('question-answered', data => {
-        // getRoom().pooler.useQuestion(data.question, data.answer, positionInRoom);
-        getRoom().pooler.useQuestion(data, '', positionInRoom);
+        getRoom().pooler.useQuestion(data, positionInRoom);
         sendQuestions(positionInRoom);
     });
 

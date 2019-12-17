@@ -141,16 +141,9 @@ class QuestionPooler {
         return questionSelection;
     }
 
-    useQuestion(question, answer, playerIndex) {
+    useQuestion(question, playerIndex) {
         if (question === undefined) {
             throw 'Question was undefined';
-        }
-
-        // answer = answer.toLowerCase();
-
-        if (question.hasOptions !== 'none' && answer === 'no') {
-            // Do not consume this question
-            return;
         }
 
         let currentPool = this.pools[playerIndex];
