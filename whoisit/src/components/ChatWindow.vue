@@ -2,25 +2,43 @@
   <div id="phone">
     <header>
       <img
+         class="profile"
         @click="devClickCount++"
-        src="../assets/girl.svg"
+        src="../assets/coffee.svg"
         alt="Profile Picture"
       >
-      <span>Make A Friend</span>
+      <span>Connect for Coffee</span>
     </header>
     <section id="scroll">
       <div
         id="messages-window"
-        v-if="messages.length>0"
+        v-if="messages.length>0 || devClickCount > 1"
       >
         <span
           :class="'message ' + (message.user==1 ? 'ours' : message.user==2 ? 'theirs' : 'system' )"
           v-for="(message,index) in messages"
           :key="index"
         >{{message.content}}</span>
+
+      <span class="reply-selector"  v-if="replyOpen">
+        <span class="message ours"
+          v-for="option in replyOptions"
+          :key="option"
+          @click="answerQuestion(option)"
+        >{{option}}</span>
+      </span>
+
+      <span class="reply-selector questions"  v-if="questionOpen">
+        <span class="message ours"
+          v-for="option in questionOptions"
+          :key="option.text"
+          @click="chooseQuestion(option)"
+        >{{option.text }}</span>
+      </span>
+
         <span
           class="message typing-indicator"
-          v-if="this.otherIsTyping"
+          v-if="otherIsTyping"
         >
           <span></span>
           <span></span>
@@ -40,37 +58,53 @@
         <p class="disclaimer">Your messages will be logged for safety purposes</p>
       </div>
     </section>
-    <footer>
+    <footer :class="drawerOpen? 'open' :''">
       <input
         id="input"
+        ref="textInput"
         :placeholder="placeholder"
-        :disabled="this.inputDisabled && devClickCount < 10"
+        :disabled="this.inputDisabled && devClickCount < 2"
         type="text"
         v-model="newMessage"
         v-on:keyup.enter="addMessage"
       />
-      <div class="reply-options">
-        <span
+       <img @click="modalOpen = true"
+        class="icon"
+        src="../assets/hand-shake.svg"
+        alt="Found Eachother Icon"
+      > 
+
+      <!-- <div class="question-selector">
+        <span class="message ours"
           v-for="option in replyOptions"
           :key="option"
+          @click="chooseQuestion(option)"
         >{{option}}</span>
-      </div>
+      </div> -->
     </footer>
+
+   <FoundModal :show="modalOpen" @close="modalOpen = false"></FoundModal>
 
   </div>
 </template>
 
 <script>
+import FoundModal from "./Modal.vue"
 import io from "socket.io-client";
 
+console.log(process.env.NODE_ENV);
 let serverURI =
   process.env.NODE_ENV === "development"
     ? window.location.hostname + ":8080"
     : window.location.host;
+  console.log(serverURI)
 let socket = io.connect(serverURI);
 
 export default {
   name: "ChatWindow",
+  components:{
+    FoundModal
+  },
    data() {
     return {
       otherIsTyping: false,
@@ -78,8 +112,13 @@ export default {
       messages: [],
       inputDisabled: true,
       placeholder: "Type something and press ENTER to send",
-      replyOptions: ["🥵", "😱", "😥", "😨"],
-      devClickCount:0
+      replyOptions: ["Yes","No","Unsure"],
+      questionOptions: ["wil je zoenen met mij?","heb je een mooi hoofd?","heeft het leven zin/?","hoeveel zout moet er in?"],
+      devClickCount:0,
+      drawerOpen:false,
+      replyOpen: false,
+      questionOpen:false,
+      modalOpen:false,
     };
   },
   created() {
@@ -90,22 +129,44 @@ export default {
       console.log(data);
       this.messages.push({
         content:
-          "You are now in a chatroom with a stranger, and hopefully a new friend. Have a fun conversation!",
+          "You are now in a chatroom with a stranger. Try to find the other as quickly as possible!",
         user: 3
       });
-      this.inputDisabled = false;
-      window.onbeforeunload = function() {
-        return "Do you really want to leave? You are still in a conversation with a stranger!";
-      };
+      if( process.env.NODE_ENV !== "development"){
+        window.onbeforeunload = function() {
+          return "Do you really want to leave? You are still in a conversation with a stranger!";
+        };
+      }
     });
 
     // When other person sends a message
-    socket.on("chat-message", data => {
+    socket.on("chat-message", message => {
+       if(!this.replyOptions.includes(message)){
+          // If not not a reply, it's a question, so show reply
+         this.replyOpen = true;
+        // message = message.text;
+       }
+        
       this.messages.push({
-        content: data,
+        content: message,
         user: 2
       });
+
     });
+
+   // When other person sends a message
+    socket.on("question-prompt", data => {
+      console.log('prompt:' ,data)
+  //     this.messages.push({
+  //       content: data,
+  //       user: 2
+  //     });
+  //  //   this.drawerOpen = true;
+  //     this.replyOpen = true;
+      this.questionOptions = data;
+      this.questionOpen = true;
+    });
+
 
     // Match lost conection :(
     socket.on("match-terminated", data => {
@@ -124,7 +185,7 @@ export default {
     socket.on("room-killed", () => {
       this.messages.push({
         content:
-          "Connection ended by moderators. Please keep it civil next time.",
+          "Connection ended by moderators.",
         user: 3
       });
       window.onbeforeunload = undefined;
@@ -163,6 +224,37 @@ export default {
       this.messages.push({ user: 1, content: this.newMessage });
       socket.emit("chat-message", this.newMessage);
       this.newMessage = "";
+      this.inputDisabled = true;
+      this.replyOpen = false;
+
+
+    },
+
+    answerQuestion(answer){
+        this.newMessage = answer;
+        this.addMessage();
+
+        socket.emit("question-answered", this.newMessage);
+        this.replyOpen = false;
+    },
+    
+    chooseQuestion(question){
+      this.newMessage = question.text;
+      this.questionOpen = false;
+
+      if(question.hasOptions){
+
+        this.inputDisabled = false;
+        this.$refs.textInput.focus();
+        
+      }else{
+
+        this.addMessage();
+      
+      }
+
+      socket.emit('use-question', question);
+
     }
 
   },
@@ -177,7 +269,7 @@ export default {
     // And refocus the input so a mouse isn't needed
     var scrollElement = document.getElementById("scroll");
     scrollElement.scrollTop = scrollElement.scrollHeight;
-    document.getElementById("input").focus();
+    this.$refs.textInput.focus();
   }
 };
 </script>
@@ -216,7 +308,7 @@ header {
   border-radius: 15px 15px 0 0;
   font-size: 0.9em;
 }
-header img {
+header .profile {
   background: #f2f2f2;
   width: 40px;
   height: 40px;
@@ -225,36 +317,42 @@ header img {
   display: block;
 }
 
+header .icon{
+  position: absolute;
+  width: 40px;
+  display: block;
+  right: 0;
+  top: 0;
+  margin: 10px 20px;
+}
+
 footer {
   position: absolute;
   bottom: 0;
   width: 100%;
-  box-sizing: border-box;
   border: none;
   border-top: 1px solid #ebeaeb;
   outline: none;
   margin: 0;
   border-radius: 0 0 15px 15px;
-  box-sizing: border-box;
-  padding: 7px;
   transition: height 0.3s;
-  height: 60px;
+  display: grid;
+  grid-template-columns:1fr 40px ;
+  grid-template-rows: 1fr;
+  grid-column-gap: 10px;
+  padding: 10px;
 }
-footer:hover {
-  // height: 300px;
+footer.open{
+   height: 300px;
 }
-.reply-options {
-  font-size: 60px;
-  margin-top: 30px;
+footer .icon{
 }
-input {
+footer input {
   border-radius: 15px;
-  height: 30px;
   border: 1px solid #ebeaeb;
   width: 100%;
-  box-sizing: border-box;
   outline: none;
-  padding: 20px;
+  padding:5px 20px;
 }
 ::scrollbar {
   display: none;
@@ -279,11 +377,40 @@ input {
   margin-bottom: 8px;
   border-radius: 16px;
   max-width: 70%;
+  font-size: 16px;
 }
 .ours {
   background: #0076ff;
   color: #fff;
   align-self: flex-end;
+}
+.reply-selector{
+  align-self: flex-end;
+  margin-top:8px;
+}
+.reply-selector .sda .message{
+  align-self: flex-end;
+  margin-top:8px;
+}
+.reply-selector .message{
+ margin-left:10px;
+ background:#4d9fff;
+ &:hover{
+   background: #0076ff;
+ }
+}
+.reply-selector.questions .message{
+  display: block;
+  max-width: none;
+  text-align: center;
+}
+.question-selector {
+  text-align: center;
+  margin: 10px;
+}
+.question-selector span{
+  display: block;
+  margin:8px auto;
 }
 .system,
 .disclaimer {
