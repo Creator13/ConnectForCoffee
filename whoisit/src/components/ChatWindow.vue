@@ -2,6 +2,7 @@
   <div id="phone">
     <header>
       <img
+         class="profile"
         @click="devClickCount++"
         src="../assets/coffee.svg"
         alt="Profile Picture"
@@ -60,12 +61,19 @@
     <footer :class="drawerOpen? 'open' :''">
       <input
         id="input"
+        ref="textInput"
         :placeholder="placeholder"
         :disabled="this.inputDisabled && devClickCount < 2"
         type="text"
         v-model="newMessage"
         v-on:keyup.enter="addMessage"
       />
+       <img @click="modalOpen = true"
+        class="icon"
+        src="../assets/hand-shake.svg"
+        alt="Found Eachother Icon"
+      > 
+
       <!-- <div class="question-selector">
         <span class="message ours"
           v-for="option in replyOptions"
@@ -75,10 +83,13 @@
       </div> -->
     </footer>
 
+   <FoundModal :show="modalOpen" @close="modalOpen = false"></FoundModal>
+
   </div>
 </template>
 
 <script>
+import FoundModal from "./Modal.vue"
 import io from "socket.io-client";
 
 console.log(process.env.NODE_ENV);
@@ -91,6 +102,9 @@ let socket = io.connect(serverURI);
 
 export default {
   name: "ChatWindow",
+  components:{
+    FoundModal
+  },
    data() {
     return {
       otherIsTyping: false,
@@ -103,7 +117,8 @@ export default {
       devClickCount:0,
       drawerOpen:false,
       replyOpen: false,
-      questionOpen:false
+      questionOpen:false,
+      modalOpen:false,
     };
   },
   created() {
@@ -114,10 +129,9 @@ export default {
       console.log(data);
       this.messages.push({
         content:
-          "You are now in a chatroom with a stranger, and hopefully a new friend. Have a fun conversation!",
+          "You are now in a chatroom with a stranger. Try to find the other as quickly as possible!",
         user: 3
       });
-      this.inputDisabled = false;
       if( process.env.NODE_ENV !== "development"){
         window.onbeforeunload = function() {
           return "Do you really want to leave? You are still in a conversation with a stranger!";
@@ -171,7 +185,7 @@ export default {
     socket.on("room-killed", () => {
       this.messages.push({
         content:
-          "Connection ended by moderators. Please keep it civil next time.",
+          "Connection ended by moderators.",
         user: 3
       });
       window.onbeforeunload = undefined;
@@ -231,7 +245,7 @@ export default {
       if(question.hasOptions){
 
         this.inputDisabled = false;
-        document.getElementById("input").focus();
+        this.$refs.textInput.focus();
         
       }else{
 
@@ -239,7 +253,7 @@ export default {
       
       }
 
-      socket.emit('use-question', question)
+      socket.emit('use-question', question);
 
     }
 
@@ -255,7 +269,7 @@ export default {
     // And refocus the input so a mouse isn't needed
     var scrollElement = document.getElementById("scroll");
     scrollElement.scrollTop = scrollElement.scrollHeight;
-    document.getElementById("input").focus();
+    this.$refs.textInput.focus();
   }
 };
 </script>
@@ -294,7 +308,7 @@ header {
   border-radius: 15px 15px 0 0;
   font-size: 0.9em;
 }
-header img {
+header .profile {
   background: #f2f2f2;
   width: 40px;
   height: 40px;
@@ -303,61 +317,42 @@ header img {
   display: block;
 }
 
+header .icon{
+  position: absolute;
+  width: 40px;
+  display: block;
+  right: 0;
+  top: 0;
+  margin: 10px 20px;
+}
+
 footer {
   position: absolute;
   bottom: 0;
   width: 100%;
-  box-sizing: border-box;
   border: none;
   border-top: 1px solid #ebeaeb;
   outline: none;
   margin: 0;
   border-radius: 0 0 15px 15px;
-  box-sizing: border-box;
-  padding: 7px;
   transition: height 0.3s;
-  height: 60px;
+  display: grid;
+  grid-template-columns:1fr 40px ;
+  grid-template-rows: 1fr;
+  grid-column-gap: 10px;
+  padding: 10px;
 }
 footer.open{
    height: 300px;
 }
-.reply-selector{
-  align-self: flex-end;
-  margin-top:8px;
+footer .icon{
 }
-.reply-selector .sda .message{
-  align-self: flex-end;
-  margin-top:8px;
-}
-.reply-selector .message{
- margin-left:10px;
- background:#4d9fff;
- &:hover{
-   background: #0076ff;
- }
-}
-.reply-selector.questions .message{
-  display: block;
-  max-width: none;
-  text-align: center;
-}
-.question-selector {
-  text-align: center;
-  margin: 10px;
-}
-.question-selector span{
-  display: block;
-  margin:8px auto;
-}
-
-input {
+footer input {
   border-radius: 15px;
-  height: 30px;
   border: 1px solid #ebeaeb;
   width: 100%;
-  box-sizing: border-box;
   outline: none;
-  padding: 20px;
+  padding:5px 20px;
 }
 ::scrollbar {
   display: none;
@@ -388,6 +383,34 @@ input {
   background: #0076ff;
   color: #fff;
   align-self: flex-end;
+}
+.reply-selector{
+  align-self: flex-end;
+  margin-top:8px;
+}
+.reply-selector .sda .message{
+  align-self: flex-end;
+  margin-top:8px;
+}
+.reply-selector .message{
+ margin-left:10px;
+ background:#4d9fff;
+ &:hover{
+   background: #0076ff;
+ }
+}
+.reply-selector.questions .message{
+  display: block;
+  max-width: none;
+  text-align: center;
+}
+.question-selector {
+  text-align: center;
+  margin: 10px;
+}
+.question-selector span{
+  display: block;
+  margin:8px auto;
 }
 .system,
 .disclaimer {
