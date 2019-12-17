@@ -192,4 +192,8 @@ io.on('connection', (socket) => {
     socket.on('stopTyping', () => {
         socket.to(roomId).emit('stopTyping');
     });
+
+    socket.on('match-found', () => {
+        io.to(roomId).emit('game-won');
+    });
 });

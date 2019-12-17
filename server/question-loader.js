@@ -70,12 +70,22 @@ class Question {
         this.text = text;
         this.used = false;
 
-        let regex = /\[[A-Z ]*]/;
-        this.hasOptions = regex.test(text);
+        let listRegex = /\[[A-Z ]*]/;
+        // this.hasOptions = regex.test(text);
 
-        if (this.hasOptions) {
+        if (listRegex.test(text)) {
+            this.hasOptions = 'optionList';
+        }
+        else if (/\{[A-Z ]*}/.test(text)) {
+            this.hasOptions = 'freefill';
+        }
+        else {
+            this.hasOptions = 'none';
+        }
+
+        if (this.hasOptions === 'optionList') {
             // convert variable in question from form [VARIABLE NAME] to variable-name
-            let optionFileName = this.text.match(regex)[0];
+            let optionFileName = this.text.match(listRegex)[0];
             optionFileName = optionFileName.replace(/\[|\]/g, '').replace(/ /, '-').toLowerCase();
 
             // Load the file static/options/variable-name.txt

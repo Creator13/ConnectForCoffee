@@ -1,8 +1,8 @@
-Do you watch [TV SHOW]?
-Do you like [GENRE] music?
+Do you watch {TV SHOW}?
+Do you like {GENRE} music?
 Do you like going to concerts?
 Do you like going to festivals?    
-Do you like [SPORTS]?
+Do you like {SPORTS}?
 Do you play videogames?
 Do you play mobile games?
 Do you like board games?

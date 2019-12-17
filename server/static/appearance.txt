@@ -13,13 +13,13 @@ Do you have a backpack with you?
 Do you have a travel bag with you?
 Are you wearing a skirt?
 Are you wearing something formal?
-Are you wearing a [COLOUR] item of clothing?
-Are you wearing [COLOUR] shoes?
-Do you have [COLOUR] eyes?
+Are you wearing a [CLOTHING COLOUR] item of clothing?
+Are you wearing [CLOTHING COLOUR] shoes?
+Do you have [EYE COLOUR] eyes?
 Do you have any tattoos?
 Do you have piercings?
-Are you taller than [HEIGHT]?
-Are you shorter than [HEIGHT]?
+Are you taller than {HEIGHT}?
+Are you shorter than {HEIGHT}?
 Are you wearing glasses?
 Are you wearing sunglasses?    
 Are you male-presenting?
