@@ -18,8 +18,9 @@ Are you wearing [CLOTHING COLOUR] shoes?
 Do you have [EYE COLOUR] eyes?
 Do you have any tattoos?
 Do you have piercings?
-Are you taller than {HEIGHT}?
-Are you shorter than {HEIGHT}?
+Are you tall?
+Are you of average height?
+Are you short?
 Are you wearing glasses?
 Are you wearing sunglasses?    
 Are you male-presenting?
@@ -32,7 +33,7 @@ Do you have an iPhone?
 Are you standing?
 Are you sitting?
 Are you walking around?
-Are you near the VR space?
-Are you near the teacher room?
 Are you eating right now?
 Are you drinking something right now?
+Are you near platform [PLATFORM NUMBER]?
+Do you have a dog with you?

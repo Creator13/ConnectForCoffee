@@ -1,0 +1,17 @@
+Red
+Pink
+Purple
+Bordeaux
+Blue
+Light blue
+Dark blue
+Green
+Light green
+Dark green
+Yellow
+Orange
+Black
+White
+Dark grey
+Light grey
+Denim
