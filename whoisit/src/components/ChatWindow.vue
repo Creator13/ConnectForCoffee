@@ -132,7 +132,7 @@ export default {
       newMessage: "",
       messages: [],
       inputDisabled: true,
-      placeholder: "Type something and press ENTER to send",
+      placeholder: "Waiting for the other player...",
       replyOptions: ["Yes", "No", "Unsure"],
       questionOptions: [],
       devClickCount: 0,
@@ -158,9 +158,13 @@ export default {
 
       if (data.waiterId === socket.id) {
         content = "Other player found! It's now their turn, please be patient while they pick a question.";
+        this.placeholder = "Waiting for the other player..."
         this.modalInput = true; // Set one of the players as input for the other;
+         this.otherIsTyping = true;
       } else {
         content = "Another player has been found! Ask them a question:";
+        this.placeholder = "Pick a question"
+         this.otherIsTyping = false;
       }
       this.messages.push({
         content,
@@ -184,16 +188,22 @@ export default {
         this.otherIsTyping = false;
         this.gameWon = true;
         this.$nextTick(() => JsBarcode(this.$refs.voucherCanvas, data.barcode, {
-  background: null,
-  displayValue:false
-}));
+          background: null,
+          displayValue:false
+        }));
+
+        this.placeholder = "Game is over!"
      });
 
     // When other person sends a message
     socket.on("chat-message", message => {
+
       if (!this.replyOptions.includes(message)) {
         // If not not a reply, it's a question, so show reply
         this.replyOpen = true;
+        this.otherIsTyping = false;
+        
+        this.placeholder = "Pick a reply"
         // message = message.text;
       }
 
@@ -206,6 +216,7 @@ export default {
     // Server sends question prompt to pick one from
     socket.on("question-prompt", data => {
       console.log("prompt:", data);
+       this.placeholder = "Pick a question"
       //     this.messages.push({
       //       content: data,
       //       user: 2
@@ -240,12 +251,12 @@ export default {
       this.otherIsTyping = false;
     });
 
-    socket.on("typing", () => {
-      this.otherIsTyping = true;
-    });
-    socket.on("stopTyping", () => {
-      this.otherIsTyping = false;
-    });
+    // socket.on("typing", () => {
+    //   this.otherIsTyping = true;
+    // });
+    // socket.on("stopTyping", () => {
+    //   this.otherIsTyping = false;
+    // });
   },
   methods: {
     // Request to join a room from server
@@ -260,12 +271,6 @@ export default {
 
     // Adds a message typed by this user to the chat window
     addMessage() {
-      // SUPER HACKY WAY OF ACCESSING GODVIEW
-      if (this.newMessage === "illuminati-access") {
-        window.location.href = "/godview.html";
-        return;
-      }
-
       if (this.newMessage.length < 1) return;
       this.messages.push({ user: 1, content: this.newMessage });
       socket.emit("chat-message", this.newMessage);
@@ -288,7 +293,10 @@ export default {
       this.newMessage = question.text;
       this.questionOpen = false;
 
+      this.placeholder = "Waiting for the other player..."
+
       if (question.hasOptions === 'none') {
+        this.otherIsTyping = true;
         this.addMessage();
       } else if(question.hasOptions === 'freefill'){
         this.inputDisabled = false;
@@ -303,9 +311,9 @@ export default {
   },
   watch: {
     // Watch input field to emit typing events
-    newMessage(value) {
-      value ? socket.emit("typing", this.username) : socket.emit("stopTyping");
-    }
+    // newMessage(value) {
+    // //  value ? socket.emit("typing", this.username) : socket.emit("stopTyping");
+    // }
   },
   updated() {
     // Everytime a new message is added, scroll to the bottom so it is in view
@@ -395,6 +403,10 @@ footer input {
   width: 100%;
   outline: none;
   padding: 5px 20px;
+  &:disabled{
+    background: #f2f2f2;
+    color:#000;
+  }
 }
 ::scrollbar {
   display: none;
@@ -462,6 +474,7 @@ footer input {
   text-align: center;
   font-size: 0.8em;
   font-weight: bold;
+  max-width: 90%;
 }
 .voucher{
   box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
