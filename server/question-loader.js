@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 function loadFile(filename) {
-    const filepath = path.join(__dirname, `static/${filename}`)
+    const filepath = path.join(__dirname, `static/${filename}`);
     // Load the file
     const data = fs.readFileSync(filepath, 'UTF-8');
     // Split on newline chars
@@ -22,8 +22,9 @@ function getQuestions() {
         array.forEach((line) => {
             questions.push(new Question(line));
         });
+
         return questions;
-    }
+    };
 
     return {
         appearance: makeQuestions(loadFile('appearance.txt')),
@@ -48,7 +49,9 @@ function randomSelect(array, n = 1) {
     while (randomIndexes.length < n) {
         let num = Math.floor(Math.random() * unusedQuestions.length);
 
-        if (randomIndexes.includes(num)) continue;
+        if (randomIndexes.includes(num)) {
+            continue;
+        }
 
         randomIndexes.push(num);
     }
@@ -67,9 +70,9 @@ class Question {
         this.text = text;
         this.used = false;
 
-        let regex = /\[[A-Z ]*\]/
+        let regex = /\[[A-Z ]*]/;
         this.hasOptions = regex.test(text);
-        
+
         if (this.hasOptions) {
             // convert variable in question from form [VARIABLE NAME] to variable-name
             let optionFileName = this.text.match(regex)[0];
@@ -94,7 +97,7 @@ class QuestionPooler {
     constructor(players = 2) {
         this.players = players;
         // this.waitingForAnswer = false;
-        
+
         this.pools = [];
         for (let i = 0; i < players; i++) {
             // Add a new pool
@@ -105,32 +108,44 @@ class QuestionPooler {
         }
     }
 
-    getNewQuestions(playerIndex, n = 3) {
+    getNewQuestions(playerIndex, questionList, n = 3) {
         playerIndex = parseInt(playerIndex);
-        if (playerIndex >= this.players || playerIndex < 0 || playerIndex == undefined) {
+        if (playerIndex >= this.players || playerIndex < 0 || playerIndex === undefined) {
             throw `playerIndex ${playerIndex} was out of range. Player count: ${this.players}.`;
         }
 
         let currentPool = this.pools[playerIndex];
 
-        return randomSelect(currentPool.questions.appearance, n);
+        let questionSelection = undefined
+        if (questionList === 'appearance') {
+            questionSelection = randomSelect(currentPool.questions.appearance, n);
+        }
+        else if (questionList === 'interests') {
+            questionSelection = randomSelect(currentPool.questions.interests, n);
+        }
+
+        if (questionSelection === undefined) {
+            throw 'Unknown question list';
+        }
+
+        return questionSelection;
     }
 
     useQuestion(question, playerIndex) {
-        if (question == undefined) {
+        if (question === undefined) {
             throw 'Question was undefined';
         }
 
         let currentPool = this.pools[playerIndex];
         for (let q of currentPool.questions.appearance) {
-            if (q == question) {
+            if (q.text === question.text) {
                 q.use();
                 return;
             }
         }
 
         for (let q of currentPool.questions.interests) {
-            if (q == question) {
+            if (q.text === question.text) {
                 q.use();
                 return;
             }
@@ -138,7 +153,7 @@ class QuestionPooler {
     }
 
     getAll(playerIndex) {
-        if (playerIndex >= this.players || playerIndex < 0 || playerIndex == undefined) {
+        if (playerIndex >= this.players || playerIndex < 0 || playerIndex === undefined) {
             throw `playerIndex ${playerIndex} was out of range. Player count: ${this.players}.`;
         }
 
@@ -160,7 +175,7 @@ module.exports.Question = Question;
 //     let qs = qp.getNewQuestions(0);
 //     console.log(qs);
 //     console.log(`${i}: Got ${qs.length} questions back`);
-    
+
 //     if (qs.length <= 0) break;
 
 //     qs[0].use();

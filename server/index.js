@@ -20,7 +20,7 @@ let openRooms = []; // Open room is a room with only 1 player :(
 
 function activeRoomIndex(roomId) {
     for (let i = 0; i < activeRooms.length; i++) {
-        if (activeRooms[i].room_id == roomId) {
+        if (activeRooms[i].room_id === roomId) {
             return i;
         }
     }
@@ -36,11 +36,11 @@ godview.on('connection', (socket) => {
         console.log(`Kill room ${roomId}`);
 
         io.in(roomId).clients((error, clients) => {
-            if (error)
-                console.log(error)
+            if (error) {
+                console.log(error);
+            }
 
             for (let client of clients) {
-                console.log('clients in room: ' + client)
                 io.to(client).emit('room-killed');
 
                 let clientSocket = io.sockets.connected[client];
@@ -51,22 +51,36 @@ godview.on('connection', (socket) => {
 });
 
 io.on('connection', (socket) => {
-    let matchRoom = ''; // the room this socket is connected to
+    console.log(`New connection. Socket: ${socket.id}`);
+    let roomId = ''; // the room this socket is connected to
     let positionInRoom = -1;
+    let questionCounter = 0;
 
     let sendQuestions = (playerIndex) => {
-        let room = activeRooms[activeRoomIndex(matchRoom)];
-        let questions = room.pooler.getNewQuestions(playerIndex);
-        if (playerIndex == positionInRoom) {
-            socket.emit('question-prompt', questions);
+        let room = activeRooms[activeRoomIndex(roomId)];
+
+        let questions;
+        if (questionCounter % 4 === 3) {
+            questions = room.pooler.getNewQuestions(playerIndex, "interests");
+            console.log(`Socket ${socket.id}: questionIndex: ${questionCounter} | getting interest questions`);
         }
         else {
-            socket.in(matchRoom).emit('question-prompt', questions);
+            questions = room.pooler.getNewQuestions(playerIndex, "appearance");
+            console.log(`Socket ${socket.id}: questionIndex: ${questionCounter} | getting appearance questions`);
         }
-    }
+
+
+        if (playerIndex === positionInRoom) {
+            socket.emit('question-prompt', questions);
+            questionCounter++;
+        }
+        else {
+            socket.in(roomId).emit('question-prompt', questions);
+        }
+    };
 
     socket.on('use-question', (data) => {
-        let room = activeRooms[activeRoomIndex(matchRoom)];
+        let room = activeRooms[activeRoomIndex(roomId)];
         room.pooler.useQuestion(data, positionInRoom);
     });
 
@@ -75,13 +89,21 @@ io.on('connection', (socket) => {
         if (openRooms.length > 0) {
             let openRoom = openRooms.shift(); // Shift returns first item of array and removes it
             socket.join(openRoom);
-            matchRoom = openRoom;
+            roomId = openRoom;
 
             // Create a new active room
-            activeRooms.push({
-                room_id: matchRoom,
+            let room = {
+                room_id: roomId,
                 currentRound: 0,
-                pooler: new questions.Pooler(2)
+                pooler: new questions.Pooler(2),
+                roomCode: Math.floor(100000 + Math.random() * 900000).toString(10) // Generate 6-digit code
+            };
+
+            activeRooms.push(room);
+
+            io.in(roomId).emit('starting-room', {
+                code: room.roomCode,
+                waiterId: socket.id
             });
 
             // position in room is 0; they are the first person to join the room
@@ -90,12 +112,12 @@ io.on('connection', (socket) => {
             // Start the first question
             sendQuestions(positionInRoom === 1 ? 0 : 1);
 
-            socket.in(matchRoom).emit('match-made', matchRoom);
-            socket.emit('match-made', matchRoom);
+            socket.in(roomId).emit('match-made', roomId);
+            socket.emit('match-made', roomId);
+
+            console.log(`Socket ${socket.id} joined room ${room.room_id}.`);
         }
         else {
-            console.log('New connection. No players in queue, putting in queue:')
-
             // Generate random string for new room
             let newRoom = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
             openRooms.push(newRoom);
@@ -103,70 +125,74 @@ io.on('connection', (socket) => {
             // position in room is 0; they are the first person to join the room
             positionInRoom = 0;
 
-            socket.join(newRoom)
-            matchRoom = newRoom;
+            socket.join(newRoom);
+            roomId = newRoom;
+
+            console.log(`No open rooms found for ${socket.id}. Created new room id: ${roomId}`);
         }
 
         godview.emit('joined-room', {
             id: socket.id,
-            room: matchRoom
+            room: roomId
         })
 
     });
 
     socket.on('disconnect', () => {
         // If player has no matchroom, they did not even click the start button yet so nothing matters
-        if (matchRoom !== '') {
-            let index = openRooms.indexOf(matchRoom);
+        if (roomId !== '') {
+            let index = openRooms.indexOf(roomId);
 
             // If player was in open room (c.q. still alone), no worries 
             // just remove it from open rooms list
             if (index >= 0) {
                 openRooms.splice(index, 1);
                 godview.emit('log', {
-                    room: matchRoom,
+                    room: roomId,
                     user: socket.id,
                     message: 'disconnected from waiting room'
                 });
             }
             else {
                 // let other user know they are alone:((()
-                socket.to(matchRoom).emit('match-terminated');
+                socket.to(roomId).emit('match-terminated');
                 godview.emit('log', {
-                    room: matchRoom,
+                    room: roomId,
                     user: socket.id,
                     message: 'disconnected from active room'
                 });
 
                 // Room is no longer active once a player leaves
-                let index = activeRoomIndex(matchRoom);
+                let index = activeRoomIndex(roomId);
                 if (index >= 0) {
                     activeRooms.splice(index, 1);
                 }
             }
         }
+
+        console.log(`Disconnected socket ${socket.id}`);
     });
 
-    socket.on('question-answered', (answer) => {
+    socket.on('question-answered', answer => {
         sendQuestions(positionInRoom);
-    })
+    });
 
     // Relay chat and typing events to the other user
     socket.on('chat-message', (data) => {
-        socket.to(matchRoom).emit('chat-message', (data));
+        socket.to(roomId).emit('chat-message', (data));
         godview.emit('log', {
-            room: matchRoom,
+            room: roomId,
             user: socket.id,
             message: data
         });
     });
 
     socket.on('typing', () => {
-        socket.to(matchRoom).emit('typing', true);
+        socket.to(roomId).emit('typing', true);
     });
 
     socket.on('stopTyping', () => {
-        socket.to(matchRoom).emit('stopTyping');
+        socket.to(roomId).emit('stopTyping');
     });
 
 });
