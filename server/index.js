@@ -32,6 +32,7 @@ let godview = io.of('/godview'); // Namespace for all access view
 
 // Watch godview connection and give ability to kill a room
 godview.on('connection', (socket) => {
+    console.log(`Socket ${socket.id} entered godview`);
     socket.on('kill-room', (roomId) => {
         console.log(`Kill room ${roomId}`);
 
@@ -56,19 +57,20 @@ io.on('connection', (socket) => {
     let positionInRoom = -1;
     let questionCounter = 0;
 
-    let sendQuestions = (playerIndex) => {
-        let room = activeRooms[activeRoomIndex(roomId)];
+    let getRoom = () => {
+        return activeRooms[activeRoomIndex(roomId)];
+    };
+
+    let sendQuestions = playerIndex => {
+        let room = getRoom();
 
         let questions;
         if (questionCounter % 4 === 3) {
             questions = room.pooler.getNewQuestions(playerIndex, "interests");
-            console.log(`Socket ${socket.id}: questionIndex: ${questionCounter} | getting interest questions`);
         }
         else {
             questions = room.pooler.getNewQuestions(playerIndex, "appearance");
-            console.log(`Socket ${socket.id}: questionIndex: ${questionCounter} | getting appearance questions`);
         }
-
 
         if (playerIndex === positionInRoom) {
             socket.emit('question-prompt', questions);
@@ -79,9 +81,8 @@ io.on('connection', (socket) => {
         }
     };
 
-    socket.on('use-question', (data) => {
-        let room = activeRooms[activeRoomIndex(roomId)];
-        room.pooler.useQuestion(data, positionInRoom);
+    socket.on('use-question', data => {
+        getRoom().pooler.useQuestion(data, positionInRoom);
     });
 
     socket.on('join-room', () => {
@@ -134,8 +135,7 @@ io.on('connection', (socket) => {
         godview.emit('joined-room', {
             id: socket.id,
             room: roomId
-        })
-
+        });
     });
 
     socket.on('disconnect', () => {
@@ -194,5 +194,4 @@ io.on('connection', (socket) => {
     socket.on('stopTyping', () => {
         socket.to(roomId).emit('stopTyping');
     });
-
 });
