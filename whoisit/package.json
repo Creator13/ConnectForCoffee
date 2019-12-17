@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "core-js": "^3.4.3",
+    "jsbarcode": "^3.11.0",
     "socket.io": "^2.3.0",
     "vue": "^2.6.10"
   },
