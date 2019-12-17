@@ -11,6 +11,7 @@
                 pattern="[0-9]"
                 maxlength="6"
                 placeholder="000000"
+                v-model="inputVal"
             >
         </div>
         <div v-else>
@@ -28,7 +29,12 @@
 <script>
 export default {
   name: "FoundModal",
-  props: ['show'],
+  props: ['show','code','input'],
+  data(){
+      return{
+        inputVal:undefined,
+      }
+  },
   created() {
     document.addEventListener("keydown", (e) => {
       if (this.show && e.keyCode == 27) {
@@ -38,25 +44,22 @@ export default {
   },
   watch:{
       show(val){
-          if(val == true){
-               console.log(this.$refs.inputCode,this.$refs.inputCode.focus);
-
-                this.$nextTick(() =>  this.$refs.inputCode.focus())
+          if(val === true && this.input === true){
+            this.$nextTick(() =>  this.$refs.inputCode.focus())
           }
-
-      }
-
-  },
-  data(){
-      return{
-          input:true,
-          code:123456
+      },
+      inputVal(val){
+        if(val == this.code){
+            this.foundMatch();
+        }
       }
   },
   methods: {
-        // ...
-        close: function () {
+        close() {
             this.$emit('close');
+        },
+        foundMatch(){
+            this.$emit('found-match');
         }
     }
 };

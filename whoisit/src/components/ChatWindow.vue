@@ -2,7 +2,7 @@
   <div id="phone">
     <header>
       <img
-         class="profile"
+        class="profile"
         @click="devClickCount++"
         src="../assets/coffee.svg"
         alt="Profile Picture"
@@ -20,21 +20,39 @@
           :key="index"
         >{{message.content}}</span>
 
-      <span class="reply-selector"  v-if="replyOpen">
-        <span class="message ours"
-          v-for="option in replyOptions"
-          :key="option"
-          @click="answerQuestion(option)"
-        >{{option}}</span>
-      </span>
+        <div
+          class="won-game message system voucher"
+          v-if="gameWon"
+        >
+        <h1>Congratulations!</h1>
+        <p>Coffee for youuuu</p>
+        <canvas ref="voucherCanvas">
 
-      <span class="reply-selector questions"  v-if="questionOpen">
-        <span class="message ours"
-          v-for="option in questionOptions"
-          :key="option.text"
-          @click="chooseQuestion(option)"
-        >{{option.text }}</span>
-      </span>
+        </canvas>
+        </div>
+        <div
+          class="reply-selector"
+          v-if="replyOpen"
+        >
+          <span
+            class="message ours"
+            v-for="option in replyOptions"
+            :key="option"
+            @click="answerQuestion(option)"
+          >{{option}}</span>
+        </div>
+
+        <div
+          class="reply-selector questions"
+          v-if="questionOpen"
+        >
+          <span
+            class="message ours"
+            v-for="option in questionOptions"
+            :key="option.text"
+            @click="chooseQuestion(option)"
+          >{{option.text }}</span>
+        </div>
 
         <span
           class="message typing-indicator"
@@ -51,14 +69,21 @@
       >
         <h1>hello bored person!</h1>
         <p>
-          Since you have to wait here anyways, why not have a little talk with a stranger near you?
+          Since you have to wait here anyways, why not play a game with a stranger near you?
         </p>
         <button @click="joinRoom">Find a friend</button>
 
         <p class="disclaimer">Your messages will be logged for safety purposes</p>
       </div>
     </section>
-    <footer :class="drawerOpen? 'open' :''">
+    <footer :class="matchCode !== 0? 'open' :''">
+        <img
+        @click="modalOpen = true"
+        class="icon"
+        src="../assets/handshake.svg"
+        alt="Found Eachother Icon"
+
+      >
       <input
         id="input"
         ref="textInput"
@@ -68,57 +93,57 @@
         v-model="newMessage"
         v-on:keyup.enter="addMessage"
       />
-       <img @click="modalOpen = true"
-        class="icon"
-        src="../assets/hand-shake.svg"
-        alt="Found Eachother Icon"
-      > 
 
-      <!-- <div class="question-selector">
-        <span class="message ours"
-          v-for="option in replyOptions"
-          :key="option"
-          @click="chooseQuestion(option)"
-        >{{option}}</span>
-      </div> -->
     </footer>
 
-   <FoundModal :show="modalOpen" @close="modalOpen = false"></FoundModal>
+    <FoundModal
+      :show="modalOpen"
+      :code="matchCode"
+      :input="modalInput"
+      @close="modalOpen = false"
+      @found-match="foundMatch"
+    ></FoundModal>
 
   </div>
 </template>
 
 <script>
-import FoundModal from "./Modal.vue"
+import FoundModal from "./Modal.vue";
 import io from "socket.io-client";
+import JsBarcode from "jsbarcode";
 
-console.log(process.env.NODE_ENV);
 let serverURI =
   process.env.NODE_ENV === "development"
     ? window.location.hostname + ":8080"
     : window.location.host;
-  console.log(serverURI)
 let socket = io.connect(serverURI);
+
+console.log(process.env.NODE_ENV);
+console.log(serverURI);
 
 export default {
   name: "ChatWindow",
-  components:{
+  components: {
     FoundModal
   },
-   data() {
+  data() {
     return {
       otherIsTyping: false,
       newMessage: "",
       messages: [],
       inputDisabled: true,
       placeholder: "Type something and press ENTER to send",
-      replyOptions: ["Yes","No","Unsure"],
-      questionOptions: ["wil je zoenen met mij?","heb je een mooi hoofd?","heeft het leven zin/?","hoeveel zout moet er in?"],
-      devClickCount:0,
-      drawerOpen:false,
+      replyOptions: ["Yes", "No", "Unsure"],
+      questionOptions: [],
+      devClickCount: 0,
+      drawerOpen: false,
       replyOpen: false,
-      questionOpen:false,
-      modalOpen:false,
+      questionOpen: false,
+      modalOpen: false,
+      modalInput:false,
+      matchCode:0,
+      matchFound:false,
+      gameWon:false,
     };
   },
   created() {
@@ -126,47 +151,70 @@ export default {
 
     // When a match is found
     socket.on("match-made", data => {
-      console.log(data);
+      console.log(socket.id, data.waiterId);
+      let content;
+
+      this.matchCode = data.code;
+
+      if (data.waiterId === socket.id) {
+        content = "Other player found! It's now their turn, please be patient while they pick a question.";
+        this.modalInput = true; // Set one of the players as input for the other;
+      } else {
+        content = "Another player has been found! Ask them a question:";
+      }
       this.messages.push({
-        content:
-          "You are now in a chatroom with a stranger. Try to find the other as quickly as possible!",
+        content,
         user: 3
       });
-      if( process.env.NODE_ENV !== "development"){
+
+      // Set up exit modal
+      if (process.env.NODE_ENV !== "development") {
         window.onbeforeunload = function() {
           return "Do you really want to leave? You are still in a conversation with a stranger!";
         };
       }
     });
 
+     socket.on("game-won", data => {
+        console.log('game won', data)
+        this.modalOpen = false;
+        this.inputDisabled = true;
+        this.questionOpen = false;
+        this.replyOpen = false;
+        this.otherIsTyping = false;
+        this.gameWon = true;
+        this.$nextTick(() => JsBarcode(this.$refs.voucherCanvas, data.barcode, {
+  background: null,
+  displayValue:false
+}));
+     });
+
     // When other person sends a message
     socket.on("chat-message", message => {
-       if(!this.replyOptions.includes(message)){
-          // If not not a reply, it's a question, so show reply
-         this.replyOpen = true;
+      if (!this.replyOptions.includes(message)) {
+        // If not not a reply, it's a question, so show reply
+        this.replyOpen = true;
         // message = message.text;
-       }
-        
+      }
+
       this.messages.push({
         content: message,
         user: 2
       });
-
     });
 
-   // When other person sends a message
+    // Server sends question prompt to pick one from
     socket.on("question-prompt", data => {
-      console.log('prompt:' ,data)
-  //     this.messages.push({
-  //       content: data,
-  //       user: 2
-  //     });
-  //  //   this.drawerOpen = true;
-  //     this.replyOpen = true;
+      console.log("prompt:", data);
+      //     this.messages.push({
+      //       content: data,
+      //       user: 2
+      //     });
+      //  //   this.drawerOpen = true;
+      //     this.replyOpen = true;
       this.questionOptions = data;
       this.questionOpen = true;
     });
-
 
     // Match lost conection :(
     socket.on("match-terminated", data => {
@@ -184,8 +232,7 @@ export default {
     // Cut off by godview
     socket.on("room-killed", () => {
       this.messages.push({
-        content:
-          "Connection ended by moderators.",
+        content: "Connection ended by moderators.",
         user: 3
       });
       window.onbeforeunload = undefined;
@@ -203,9 +250,8 @@ export default {
   methods: {
     // Request to join a room from server
     joinRoom() {
-
       this.messages.push({
-        content: "Finding another bored soul..",
+        content: "Waiting for another player to join..",
         user: 3
       });
 
@@ -215,7 +261,7 @@ export default {
     // Adds a message typed by this user to the chat window
     addMessage() {
       // SUPER HACKY WAY OF ACCESSING GODVIEW
-      if(this.newMessage === 'illuminati-access'){
+      if (this.newMessage === "illuminati-access") {
         window.location.href = "/godview.html";
         return;
       }
@@ -226,37 +272,34 @@ export default {
       this.newMessage = "";
       this.inputDisabled = true;
       this.replyOpen = false;
-
-
     },
 
-    answerQuestion(answer){
-        this.newMessage = answer;
-        this.addMessage();
+    answerQuestion(answer) {
+      this.newMessage = answer;
+      this.addMessage();
 
-        socket.emit("question-answered", this.newMessage);
-        this.replyOpen = false;
+      socket.emit("question-answered", this.newMessage);
+      this.replyOpen = false;
     },
-    
-    chooseQuestion(question){
+    foundMatch(){
+      socket.emit('match-found',true);
+    },
+    chooseQuestion(question) {
       this.newMessage = question.text;
       this.questionOpen = false;
 
-      if(question.hasOptions){
-
+      if (question.hasOptions === 'none') {
+        this.addMessage();
+      } else if(question.hasOptions === 'freefill'){
         this.inputDisabled = false;
         this.$refs.textInput.focus();
-        
-      }else{
-
-        this.addMessage();
-      
+      } else if(question.hasOptions === 'optionList'){
+         question.options;
+         this.drawerOpen = true;
       }
 
-      socket.emit('use-question', question);
-
+      socket.emit("use-question", question);
     }
-
   },
   watch: {
     // Watch input field to emit typing events
@@ -270,7 +313,7 @@ export default {
     var scrollElement = document.getElementById("scroll");
     scrollElement.scrollTop = scrollElement.scrollHeight;
     this.$refs.textInput.focus();
-  }
+  },
 };
 </script>
 
@@ -317,7 +360,7 @@ header .profile {
   display: block;
 }
 
-header .icon{
+header .icon {
   position: absolute;
   width: 40px;
   display: block;
@@ -335,24 +378,23 @@ footer {
   outline: none;
   margin: 0;
   border-radius: 0 0 15px 15px;
-  transition: height 0.3s;
+  transition: bottom 0.3s;
   display: grid;
-  grid-template-columns:1fr 40px ;
+  grid-template-columns: 40px 1fr;
   grid-template-rows: 1fr;
   grid-column-gap: 10px;
   padding: 10px;
+  bottom:-60px;
 }
-footer.open{
-   height: 300px;
-}
-footer .icon{
+footer.open {
+  bottom:0;
 }
 footer input {
   border-radius: 15px;
   border: 1px solid #ebeaeb;
   width: 100%;
   outline: none;
-  padding:5px 20px;
+  padding: 5px 20px;
 }
 ::scrollbar {
   display: none;
@@ -384,22 +426,22 @@ footer input {
   color: #fff;
   align-self: flex-end;
 }
-.reply-selector{
+.reply-selector {
   align-self: flex-end;
-  margin-top:8px;
+  margin-top: 8px;
 }
-.reply-selector .sda .message{
+.reply-selector .sda .message {
   align-self: flex-end;
-  margin-top:8px;
+  margin-top: 8px;
 }
-.reply-selector .message{
- margin-left:10px;
- background:#4d9fff;
- &:hover{
-   background: #0076ff;
- }
+.reply-selector .message {
+  margin-left: 10px;
+  background: #4d9fff;
+  &:hover {
+    background: #0076ff;
+  }
 }
-.reply-selector.questions .message{
+.reply-selector.questions .message {
   display: block;
   max-width: none;
   text-align: center;
@@ -408,9 +450,9 @@ footer input {
   text-align: center;
   margin: 10px;
 }
-.question-selector span{
+.question-selector span {
   display: block;
-  margin:8px auto;
+  margin: 8px auto;
 }
 .system,
 .disclaimer {
@@ -420,6 +462,16 @@ footer input {
   text-align: center;
   font-size: 0.8em;
   font-weight: bold;
+}
+.voucher{
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  background: url('../assets/voucher.jpg') no-repeat bottom right; 
+  background-size: cover;
+  width:100%;
+  margin: 0;
+  padding: 40px 0;
+  color:#000;
+  max-width: none;
 }
 .emptyState {
   text-align: center;
@@ -482,22 +534,22 @@ footer input {
 
 button {
   background: #313348;
-  color:#fff;
+  color: #fff;
   border-radius: 10px;
   border: none;
-  box-shadow:inset 0px 0px 0px #000;
-  transition:all 0.3s;
+  box-shadow: inset 0px 0px 0px #000;
+  transition: all 0.3s;
   padding: 20px 40px;
-  font-size:1.2em;
+  font-size: 1.2em;
   font-weight: bold;
   margin: 30px 0;
 }
 
-button:hover{
-  background:#2a2b3d;
+button:hover {
+  background: #2a2b3d;
   box-shadow: inset 3px 3px 5px #000000;
 }
-button:active{
+button:active {
   box-shadow: inset 2px 2px 10px #000000;
 }
 </style>
