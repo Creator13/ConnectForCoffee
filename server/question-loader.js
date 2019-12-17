@@ -126,7 +126,7 @@ class QuestionPooler {
 
         let currentPool = this.pools[playerIndex];
 
-        let questionSelection = undefined
+        let questionSelection = undefined;
         if (questionList === 'appearance') {
             questionSelection = randomSelect(currentPool.questions.appearance, n);
         }
@@ -141,9 +141,16 @@ class QuestionPooler {
         return questionSelection;
     }
 
-    useQuestion(question, playerIndex) {
+    useQuestion(question, answer, playerIndex) {
         if (question === undefined) {
             throw 'Question was undefined';
+        }
+
+        // answer = answer.toLowerCase();
+
+        if (question.hasOptions !== 'none' && answer === 'no') {
+            // Do not consume this question
+            return;
         }
 
         let currentPool = this.pools[playerIndex];

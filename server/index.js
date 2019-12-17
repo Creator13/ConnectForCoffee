@@ -15,6 +15,27 @@ server.listen(port, () => {
 // Set up static file server (front-end dist folder)
 app.use(express.static(path.join(__dirname, '../whoisit/dist')));
 
+app.get('/barcode', function (req, res) {
+    let code = req.query.value;
+
+    let roomFound = false;
+
+    for (let room of allRooms) {
+        if (!room.barcodeUsed || room.barcode === code) {
+            roomFound = true;
+            room.barcodeUsed = true;
+        }
+    }
+
+    if (roomFound) {
+        res.send("Barcode right! Here is coffee");
+    }
+    else {
+        res.send("Barcode wrong! No coffee for yu");
+    }
+});
+
+let allRooms = [];
 let activeRooms = [];
 let openRooms = []; // Open room is a room with only 1 player :(
 
@@ -29,6 +50,10 @@ function activeRoomIndex(roomId) {
 }
 
 let godview = io.of('/godview'); // Namespace for all access view
+
+function getBarcode() {
+    return Math.random().toString(36).substring(2, 15);
+}
 
 // Watch godview connection and give ability to kill a room
 godview.on('connection', (socket) => {
@@ -82,7 +107,8 @@ io.on('connection', (socket) => {
     };
 
     socket.on('use-question', data => {
-        getRoom().pooler.useQuestion(data, positionInRoom);
+        // TODO remove this
+        getRoom().pooler.useQuestion(data, '', positionInRoom);
     });
 
     socket.on('join-room', () => {
@@ -97,10 +123,13 @@ io.on('connection', (socket) => {
                 room_id: roomId,
                 currentRound: 0,
                 pooler: new questions.Pooler(2),
-                roomCode: Math.floor(100000 + Math.random() * 900000).toString(10) // Generate 6-digit code
+                roomCode: Math.floor(100000 + Math.random() * 900000).toString(10), // Generate 6-digit code
+                barcode: undefined,
+                barcodeUsed: false
             };
 
             activeRooms.push(room);
+            allRooms.push(room);
 
             io.in(roomId).emit('match-made', {
                 roomId: roomId,
@@ -171,7 +200,9 @@ io.on('connection', (socket) => {
         console.log(`Disconnected socket ${socket.id}`);
     });
 
-    socket.on('question-answered', answer => {
+    socket.on('question-answered', data => {
+        // getRoom().pooler.useQuestion(data.question, data.answer, positionInRoom);
+        getRoom().pooler.useQuestion(data, '', positionInRoom);
         sendQuestions(positionInRoom);
     });
 
@@ -194,6 +225,12 @@ io.on('connection', (socket) => {
     });
 
     socket.on('match-found', () => {
-        io.to(roomId).emit('game-won');
+        let barcode = getBarcode();
+
+        getRoom().barcode = barcode;
+
+        io.to(roomId).emit('game-won', {
+            barcode: barcode
+        });
     });
 });
