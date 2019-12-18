@@ -1,13 +1,14 @@
 <template>
   <div id="phone">
     <header>
-      <img
-        class="profile"
-        @click="devClickCount++"
-        src="../assets/coffee.svg"
-        alt="Profile Picture"
-      >
-      <span>Connect for Coffee</span>
+      <div class="profile">
+        <img
+          @click="devClickCount++"
+          src="../assets/logo_notext.svg"
+          alt="Connect For Coffee"
+        >
+      </div>
+
     </header>
     <section id="scroll">
       <div
@@ -24,11 +25,11 @@
           class="won-game message system voucher"
           v-if="gameWon"
         >
-        <h1>Congratulations!</h1>
-        <p>Coffee for youuuu</p>
-        <canvas ref="voucherCanvas">
+          <h1>Congratulations!</h1>
+          <p>Here's a voucher for free coffee for the two of you!</p>
+          <canvas ref="voucherCanvas">
 
-        </canvas>
+          </canvas>
         </div>
         <div
           class="reply-selector"
@@ -67,51 +68,79 @@
         class="emptyState"
         v-else
       >
-        <h1>Hello traveller</h1>
+
+        <img
+          src="../assets/logo_text.svg"
+          alt="Connect For Coffee"
+        >
+
         <p>
-         Find the other player at the station for a free coffee each, which you can enjoy together!
-         Make sure you have at least 5 minutes to play this.
+          You will be connected to a fellow traveller.
+Play together and find each other to get Coffee for 2!<br>
+Make sure you have 10 minutes to play.
         </p>
-        <p>
-          There are 3 rounds of appearance questions where you can each pick 1 of the 4 given questions to ask the other. After those there is 1 bonus ‘’get to know each other’’ question. You answer these questions with yes, no or maybe. With the help of these questions you should try to find each other. 
-        </p>
-        <button @click="joinRoom">Start!</button>
+          <img
+       
+          class="icon explain"
+          src="../assets/handshake.svg"
+          alt="Found Eachother Icon"
+        >
+
+<p>When you've found eachother, click on the handshake icon to get your free coffee.</p>
+     <!--   <b>Ask questions like these!</b>
+        <div class="question-selector">
+          <span class="message ours">Are you near platform 12?</span>
+          <span class="message ours">Do you have a beard?</span>
+        </div>
+        <br>
+        <b>And answer them!</b>
+        <div class="reply-selector">
+          <span
+            class="message ours"
+            v-for="option in replyOptions"
+            :key="option"
+          >{{option}}</span>
+        </div>-->
+        
+
+        <button @click="joinRoom">Start</button>
 
         <p class="disclaimer">Your messages will be logged for safety purposes</p>
       </div>
     </section>
     <footer :class="matchCode !== 0? 'open' :''">
       <div class="input">
-          <img
-        @click="modalOpen = true"
-        class="icon"
-        src="../assets/handshake.svg"
-        alt="Found Eachother Icon"
-
-      >
-      <input
-        id="input"
-        ref="textInput"
-        :placeholder="placeholder"
-        :disabled="this.inputDisabled && devClickCount < 2"
-        type="text"
-        v-model="newMessage"
-        v-on:keyup.enter="addMessage"
-      />
+        <img
+          @click="modalOpen = true"
+          class="icon"
+          src="../assets/handshake.svg"
+          alt="Found Eachother Icon"
+        >
+        <input
+          id="input"
+          ref="textInput"
+          :placeholder="placeholder"
+          :disabled="this.inputDisabled && devClickCount < 2"
+          type="text"
+          v-model="newMessage"
+          v-on:keyup.enter="addMessage"
+        />
       </div>
       <!-- <select v-model="chosenQuestionBlank" v-show="questionBlanks.length  > 0" ref="questionBlankSelect">
         <option v-for="questionBlank in questionBlanks" :key="questionBlank" :value="questionBlank" >{{questionBlank}}</option>
       </select> -->
-      <div class="scroll-container"
-        :class="questionBlanks.length > 0 ? 'open' :'closed'">
+      <div
+        class="scroll-container"
+        :class="questionBlanks.length > 0 ? 'open' :'closed'"
+      >
         <div class="question-blank reply-selector">
           <span
             class="message ours"
             v-for="option in questionBlanks"
-            :key="option" 
+            :key="option"
             @click="chooseQuestionBlank(option)"
           >{{option }}</span>
-      </div>
+        </div>
       </div>
 
     </footer>
@@ -156,16 +185,16 @@ export default {
       replyOptions: ["Yes", "No", "Unsure"],
       questionOptions: [],
       questionBlanks: [],
-      chosenQuestionBlank:'',
+      chosenQuestionBlank: "",
       devClickCount: 0,
       drawerOpen: false,
       replyOpen: false,
       questionOpen: false,
       modalOpen: false,
-      modalInput:false,
-      matchCode:0,
-      matchFound:false,
-      gameWon:false,
+      modalInput: false,
+      matchCode: 0,
+      matchFound: false,
+      gameWon: false
     };
   },
   created() {
@@ -179,14 +208,15 @@ export default {
       this.matchCode = data.code;
 
       if (data.waiterId === socket.id) {
-        content = "Other player found! It's now their turn, please be patient while they pick a question.";
-        this.placeholder = "Waiting for the other player..."
+        content =
+          "Other player found! It's now their turn, please be patient while they pick a question.";
+        this.placeholder = "Waiting for the other player...";
         this.modalInput = true; // Set one of the players as input for the other;
-         this.otherIsTyping = true;
+        this.otherIsTyping = true;
       } else {
         content = "Another player has been found! Ask them a question:";
-        this.placeholder = "Pick a question"
-         this.otherIsTyping = false;
+        this.placeholder = "Pick a question";
+        this.otherIsTyping = false;
       }
       this.messages.push({
         content,
@@ -201,31 +231,32 @@ export default {
       }
     });
 
-     socket.on("game-won", data => {
-        console.log('game won', data)
-        this.modalOpen = false;
-        this.inputDisabled = true;
-        this.questionOpen = false;
-        this.replyOpen = false;
-        this.otherIsTyping = false;
-        this.gameWon = true;
-        this.$nextTick(() => JsBarcode(this.$refs.voucherCanvas, data.barcode, {
+    socket.on("game-won", data => {
+      console.log("game won", data);
+      this.modalOpen = false;
+      this.inputDisabled = true;
+      this.questionOpen = false;
+      this.replyOpen = false;
+      this.otherIsTyping = false;
+      this.gameWon = true;
+      this.$nextTick(() =>
+        JsBarcode(this.$refs.voucherCanvas, data.barcode, {
           background: null,
-          displayValue:false
-        }));
+          displayValue: false
+        })
+      );
 
-        this.placeholder = "Game is over!"
-     });
+      this.placeholder = "Game is over!";
+    });
 
     // When other person sends a message
     socket.on("chat-message", message => {
-
       if (!this.replyOptions.includes(message)) {
         // If not not a reply, it's a question, so show reply
         this.replyOpen = true;
         this.otherIsTyping = false;
-        
-        this.placeholder = "Pick a reply"
+
+        this.placeholder = "Pick a reply";
         // message = message.text;
       }
 
@@ -238,7 +269,7 @@ export default {
     // Server sends question prompt to pick one from
     socket.on("question-prompt", data => {
       console.log("prompt:", data);
-       this.placeholder = "Pick a question"
+      this.placeholder = "Pick a question";
       //     this.messages.push({
       //       content: data,
       //       user: 2
@@ -247,7 +278,6 @@ export default {
       //     this.replyOpen = true;
       this.questionOptions = data;
       this.questionOpen = true;
-  
     });
 
     // Match lost conection :(
@@ -317,10 +347,9 @@ export default {
       socket.emit("question-answered", this.newMessage);
       this.replyOpen = false;
     },
-    chooseQuestionBlank(option){
-      
+    chooseQuestionBlank(option) {
       let emptyQuestion = this.newMessage;
-      let filledQuestion = emptyQuestion.replace(/\[+([^\][]+)]+/g, option);
+      let filledQuestion = emptyQuestion.replace(/\[+([^\][]+)]+/g, option.toLowerCase());
 
       this.newMessage = filledQuestion;
       this.addMessage();
@@ -328,30 +357,28 @@ export default {
       this.questionBlanks = [];
       this.otherIsTyping = true;
     },
-    foundMatch(){
-      socket.emit('match-found',true);
+    foundMatch() {
+      socket.emit("match-found", true);
     },
     chooseQuestion(question) {
       this.newMessage = question.text;
       this.questionOpen = false;
 
+      console.log(question);
+      this.placeholder = "Waiting for the other player...";
 
-      console.log(question)
-      this.placeholder = "Waiting for the other player..."
-
-      if (question.hasOptions === 'none') {
+      if (question.hasOptions === "none") {
         this.otherIsTyping = true;
         this.addMessage();
-      } else if(question.hasOptions === 'freefill'){
+      } else if (question.hasOptions === "freefill") {
         this.inputDisabled = false;
         this.$refs.textInput.focus();
-      } else if(question.hasOptions === 'optionList'){
-         this.questionBlanks = question.options;
-         this.drawerOpen = true;
+      } else if (question.hasOptions === "optionList") {
+        this.questionBlanks = question.options;
+        this.drawerOpen = true;
       }
-  
-      socket.emit('use-question', question);
 
+      socket.emit("use-question", question);
     }
   },
   watch: {
@@ -366,7 +393,7 @@ export default {
     var scrollElement = document.getElementById("scroll");
     scrollElement.scrollTop = scrollElement.scrollHeight;
     this.$refs.textInput.focus();
-  },
+  }
 };
 </script>
 
@@ -391,35 +418,33 @@ export default {
 }
 header,
 footer {
-  background: rgba(250, 250, 250, 1);
+  background: #fcc8b2;
   backdrop-filter: blur(10px);
 }
 header {
   position: absolute;
   height: 75px;
   width: 100%;
-  border-bottom: 1px solid #ebeaeb;
+  border-bottom: 1px solid #fef1eb;
   text-align: center;
   box-sizing: border-box;
   border-radius: 15px 15px 0 0;
   font-size: 0.9em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 header .profile {
-  background: #f2f2f2;
-  width: 40px;
-  height: 40px;
-  border-radius: 20px;
-  margin: 5px auto;
-  display: block;
+  width: 50px;
+  height: 50px;
+  border-radius: 25px;
+  overflow: hidden;
+  border: 2px solid #fef1eb;
 }
-
-header .icon {
-  position: absolute;
-  width: 40px;
-  display: block;
-  right: 0;
-  top: 0;
-  margin: 10px 20px;
+header .profile img {
+}
+.explain{
+  max-width: 60px;
 }
 
 footer {
@@ -427,48 +452,54 @@ footer {
   bottom: 0;
   width: 100%;
   border: none;
-  border-top: 1px solid #ebeaeb;
+  border-top: 1px solid #fef1eb;
   outline: none;
   margin: 0;
   border-radius: 0 0 15px 15px;
   transition: bottom 0.3s;
   padding: 10px;
-  bottom:-60px;
+  bottom: -60px;
 }
-footer .input{
+footer .input {
   display: grid;
   grid-template-columns: 40px 1fr;
   grid-template-rows: 1fr;
   grid-column-gap: 10px;
 }
 footer.open {
-  bottom:0;
+  bottom: 0;
 }
 footer input {
   border-radius: 15px;
-  border: 1px solid #ebeaeb;
+  border: none;
   width: 100%;
   outline: none;
   padding: 5px 20px;
-  &:disabled{
-    background: #f2f2f2;
-    color:#000;
+  color: #652b29;
+  font-weight: bold;
+  &::placeholder {
+    color: #652b29;
+  }
+  &:disabled {
+    background: #fef1eb;
   }
 }
-.scroll-container{
-   scroll-behavior: smooth;
-   overflow-x:scroll;
-   overflow-y: hidden;
+.scroll-container {
+  scroll-behavior: smooth;
+  overflow-x: scroll;
+  overflow-y: hidden;
   height: 50px;
+  padding-top: 12px;
   transition: height 0.2s;
-  &.closed{
-    height:0px;
+  &.closed {
+    height: 0px;
+    padding-top:0;
   }
 }
-.scroll-container .question-blank{
+.scroll-container .question-blank {
   width: max-content;
 }
-.scroll-container .question-blank .message{
+.scroll-container .question-blank .message {
   display: inline-block;
   margin-bottom: 0;
 }
@@ -491,32 +522,28 @@ footer input {
   margin-bottom: 30px;
 }
 .message {
-  background: #ebeaeb;
+  background: #fef1eb;
   color: #000;
   padding: 8px 12px;
   margin-bottom: 8px;
   border-radius: 16px;
   max-width: 70%;
   font-size: 16px;
+  display: inline-block;
 }
 .ours {
-  background: #0076ff;
+  background: #6f262a;
   color: #fff;
   align-self: flex-end;
 }
 .reply-selector {
   align-self: flex-end;
-  margin-top: 8px;
-}
-.reply-selector .sda .message {
-  align-self: flex-end;
-  margin-top: 8px;
 }
 .reply-selector .message {
   margin-left: 10px;
-  background: #4d9fff;
+  background: #8c5155;
   &:hover {
-    background: #0076ff;
+    background: #6f262a;
   }
 }
 .reply-selector.questions .message {
@@ -524,41 +551,46 @@ footer input {
   max-width: none;
   text-align: center;
 }
-.question-selector {
-  text-align: center;
-  margin: 10px;
-}
+
 .question-selector span {
   display: block;
-  margin: 8px auto;
 }
 .system,
 .disclaimer {
   align-self: center;
   background: none;
-  color: #727272;
+  color: #652b29;
   text-align: center;
   font-size: 0.8em;
   font-weight: bold;
+}
+.system {
   max-width: 90%;
 }
-.voucher{
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-  background: url('../assets/voucher.jpg') no-repeat bottom right; 
+.voucher {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  background: url("../assets/voucher.jpg") no-repeat bottom right;
   background-size: cover;
-  width:100%;
+  width: 100%;
   margin: 0;
   padding: 40px 0;
-  color:#000;
+  color: #000;
   max-width: none;
 }
-.voucher canvas{
-    max-width: 70%;
+.voucher canvas {
+  max-width: 70%;
 }
 .emptyState {
   text-align: center;
   padding: 40px;
-  padding-top: 140px;
+  padding-bottom: 0;
+  padding-top: 100px;
+}
+.emptyState .message {
+    max-width: 90%;
+    margin: 10px;
+    background:#fcedda;
+    color:#000;
 }
 /* TYPING ANIMATION
    Inspired by Joseph Fusco
@@ -574,7 +606,7 @@ footer input {
   width: 10px;
   float: left;
   margin: 0 1px;
-  background-color: #9e9ea1;
+  background-color: #652b29;
   display: block;
   border-radius: 50%;
   opacity: 0.4;
@@ -615,23 +647,21 @@ footer input {
 }
 
 button {
-  background: #313348;
-  color: #fff;
+  background: none;
+  border:3px solid #6f262a;
+  color: #6f262a;
   border-radius: 10px;
-  border: none;
-  box-shadow: inset 0px 0px 0px #000;
   transition: all 0.3s;
-  padding: 20px 40px;
+  padding: 10px 30px;
   font-size: 1.2em;
   font-weight: bold;
   margin: 30px 0;
+  font-family: inherit;
 }
 
 button:hover {
-  background: #2a2b3d;
-  box-shadow: inset 3px 3px 5px #000000;
+  background:#6f262a;
+  color:#fff;
 }
-button:active {
-  box-shadow: inset 2px 2px 10px #000000;
-}
+
 </style>
