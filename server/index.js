@@ -17,21 +17,33 @@ app.use(express.static(path.join(__dirname, '../whoisit/dist')));
 
 app.get('/barcode', function (req, res) {
     let code = req.query.value;
+    if (code === undefined || code === '') {
+        res.send("<form action=\"/barcode\" method=\"GET\">\n" +
+            "<label for=\"value\">Code: </label>\n" +
+            "<input name=\"value\" type=\"text\" placeholder=\"Enter code\" />\n" +
+            "<input type=\"submit\" value=\"Check code\"/>\n" +
+            "</form>");
+        return;
+    }
 
     let roomFound = false;
 
     for (let room of allRooms) {
-        if (!room.barcodeUsed || room.barcode === code) {
+        if (room.barcode === code) {
+            if (room.barcodeUsed) {
+                res.send("Barcode already used | <a href='/barcode'>Enter another code</a>");
+                return;
+            }
             roomFound = true;
             room.barcodeUsed = true;
         }
     }
 
     if (roomFound) {
-        res.send("Barcode right! Here is coffee");
+        res.send("Barcode right! Here is coffee | <a href='/barcode'>Enter another code</a>");
     }
     else {
-        res.send("Barcode wrong! No coffee for yu");
+        res.send("Barcode wrong! No coffee for yu | <a href='/barcode'>Enter another code</a>");
     }
 });
 

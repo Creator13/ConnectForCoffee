@@ -22,10 +22,7 @@ Are you tall?
 Are you of average height?
 Are you short?
 Are you wearing glasses?
-Are you wearing sunglasses?    
-Are you male-presenting?
-Are you female-presenting?
-Are you gender non conforming?
+Are you wearing sunglasses?
 Are you wearing Headphones?
 Are you wearing earbuds?
 Do you have a phone case?
