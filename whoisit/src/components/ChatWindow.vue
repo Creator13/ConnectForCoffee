@@ -67,17 +67,22 @@
         class="emptyState"
         v-else
       >
-        <h1>hello bored person!</h1>
+        <h1>Hello traveller</h1>
         <p>
-          Since you have to wait here anyways, why not play a game with a stranger near you?
+         Find the other player at the station for a free coffee each, which you can enjoy together!
+         Make sure you have at least 5 minutes to play this.
         </p>
-        <button @click="joinRoom">Find a friend</button>
+        <p>
+          There are 3 rounds of appearance questions where you can each pick 1 of the 4 given questions to ask the other. After those there is 1 bonus ‘’get to know each other’’ question. You answer these questions with yes, no or maybe. With the help of these questions you should try to find each other. 
+        </p>
+        <button @click="joinRoom">Start!</button>
 
         <p class="disclaimer">Your messages will be logged for safety purposes</p>
       </div>
     </section>
     <footer :class="matchCode !== 0? 'open' :''">
-        <img
+      <div class="input">
+          <img
         @click="modalOpen = true"
         class="icon"
         src="../assets/handshake.svg"
@@ -93,6 +98,21 @@
         v-model="newMessage"
         v-on:keyup.enter="addMessage"
       />
+      </div>
+      <!-- <select v-model="chosenQuestionBlank" v-show="questionBlanks.length  > 0" ref="questionBlankSelect">
+        <option v-for="questionBlank in questionBlanks" :key="questionBlank" :value="questionBlank" >{{questionBlank}}</option>
+      </select> -->
+      <div class="scroll-container"
+        :class="questionBlanks.length > 0 ? 'open' :'closed'">
+        <div class="question-blank reply-selector">
+          <span
+            class="message ours"
+            v-for="option in questionBlanks"
+            :key="option" 
+            @click="chooseQuestionBlank(option)"
+          >{{option }}</span>
+      </div>
+      </div>
 
     </footer>
 
@@ -135,6 +155,8 @@ export default {
       placeholder: "Waiting for the other player...",
       replyOptions: ["Yes", "No", "Unsure"],
       questionOptions: [],
+      questionBlanks: [],
+      chosenQuestionBlank:'',
       devClickCount: 0,
       drawerOpen: false,
       replyOpen: false,
@@ -225,6 +247,7 @@ export default {
       //     this.replyOpen = true;
       this.questionOptions = data;
       this.questionOpen = true;
+  
     });
 
     // Match lost conection :(
@@ -232,11 +255,15 @@ export default {
       console.log(data);
       this.messages.push({
         content:
-          "YOUR FRIEND HAS CLOSED THE CONNECTION :((((((((((((. Refresh page for a new chance.",
+          "The other person has left the game :(((. Refresh page for a new chance.",
         user: 3
       });
       window.onbeforeunload = undefined;
       this.inputDisabled = true;
+      this.questionOptions = [];
+      this.questionBlanks = [];
+      this.questionOpen = false;
+      this.replyOpen = false;
       this.otherIsTyping = false;
     });
 
@@ -248,6 +275,10 @@ export default {
       });
       window.onbeforeunload = undefined;
       this.inputDisabled = true;
+      this.questionOptions = [];
+      this.questionBlanks = [];
+      this.questionOpen = false;
+      this.replyOpen = false;
       this.otherIsTyping = false;
     });
 
@@ -286,6 +317,17 @@ export default {
       socket.emit("question-answered", this.newMessage);
       this.replyOpen = false;
     },
+    chooseQuestionBlank(option){
+      
+      let emptyQuestion = this.newMessage;
+      let filledQuestion = emptyQuestion.replace(/\[+([^\][]+)]+/g, option);
+
+      this.newMessage = filledQuestion;
+      this.addMessage();
+
+      this.questionBlanks = [];
+      this.otherIsTyping = true;
+    },
     foundMatch(){
       socket.emit('match-found',true);
     },
@@ -293,6 +335,8 @@ export default {
       this.newMessage = question.text;
       this.questionOpen = false;
 
+
+      console.log(question)
       this.placeholder = "Waiting for the other player..."
 
       if (question.hasOptions === 'none') {
@@ -302,11 +346,12 @@ export default {
         this.inputDisabled = false;
         this.$refs.textInput.focus();
       } else if(question.hasOptions === 'optionList'){
-         question.options;
+         this.questionBlanks = question.options;
          this.drawerOpen = true;
       }
+  
+      socket.emit('use-question', question);
 
-      socket.emit("use-question", question);
     }
   },
   watch: {
@@ -387,12 +432,14 @@ footer {
   margin: 0;
   border-radius: 0 0 15px 15px;
   transition: bottom 0.3s;
+  padding: 10px;
+  bottom:-60px;
+}
+footer .input{
   display: grid;
   grid-template-columns: 40px 1fr;
   grid-template-rows: 1fr;
   grid-column-gap: 10px;
-  padding: 10px;
-  bottom:-60px;
 }
 footer.open {
   bottom:0;
@@ -408,6 +455,24 @@ footer input {
     color:#000;
   }
 }
+.scroll-container{
+   scroll-behavior: smooth;
+   overflow-x:scroll;
+   overflow-y: hidden;
+  height: 50px;
+  transition: height 0.2s;
+  &.closed{
+    height:0px;
+  }
+}
+.scroll-container .question-blank{
+  width: max-content;
+}
+.scroll-container .question-blank .message{
+  display: inline-block;
+  margin-bottom: 0;
+}
+
 ::scrollbar {
   display: none;
 }
@@ -423,6 +488,7 @@ footer input {
   justify-content: flex-end;
   align-items: flex-start;
   padding: 80px 20px;
+  margin-bottom: 30px;
 }
 .message {
   background: #ebeaeb;
@@ -485,6 +551,9 @@ footer input {
   padding: 40px 0;
   color:#000;
   max-width: none;
+}
+.voucher canvas{
+    max-width: 70%;
 }
 .emptyState {
   text-align: center;

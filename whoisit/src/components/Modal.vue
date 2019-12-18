@@ -80,15 +80,14 @@ export default {
   justify-content: center;
 }
 .modal {
-  background: url('../assets/voucher.jpg') no-repeat bottom right; 
+  background:#ecd6bf url('../assets/voucher.jpg') no-repeat bottom right; 
   background-size: cover;
   border-radius: 20px;
   padding: 20px 40px;
   position: absolute;
   text-align: center;
   margin: 0 20px;
-  p{
-  }
+
 }
 input,.number {
   padding: 10px;
