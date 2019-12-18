@@ -8,7 +8,7 @@ module.exports = {
         // output as dist/index.html
         filename: 'index.html',
         // when using title option,
-        title: '!connectwhenbored',
+        title: '#ConnectForCoffee',
         // chunks to include on this page, by default includes
         // extracted common chunks and vendor chunks.
         chunks: ['chunk-vendors', 'chunk-common', 'index']
@@ -19,7 +19,7 @@ module.exports = {
       // Output filename is inferred to be `subpage.html`.
       godview: {
           entry: 'src/godview/main.js',
-          title:'godview'
+          title:'birdsview'
       }
     }
   }

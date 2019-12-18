@@ -26,7 +26,7 @@
           v-if="gameWon"
         >
           <h1>Congratulations!</h1>
-          <p>Here's a voucher for free coffee for the two of you!</p>
+          <p>Here's a voucher for free<br>coffee for the two of you:</p>
           <canvas ref="voucherCanvas">
 
           </canvas>
@@ -69,46 +69,60 @@
         v-else
       >
 
-        <img
-          src="../assets/logo_text.svg"
-          alt="Connect For Coffee"
-        >
-
-        <p>
-          You will be connected to a fellow traveller.
-Play together and find each other to get Coffee for 2!<br>
-Make sure you have 10 minutes to play.
-        </p>
+        <div v-if="introCount===0">
           <img
-       
-          class="icon explain"
-          src="../assets/handshake.svg"
-          alt="Found Eachother Icon"
-        >
+            src="../assets/logo_text.svg"
+            alt="Connect For Coffee"
+          >
 
-<p>When you've found eachother, click on the handshake icon to get your free coffee.</p>
-     <!--   <b>Ask questions like these!</b>
-        <div class="question-selector">
-          <span class="message ours">Are you near platform 12?</span>
-          <span class="message ours">Do you have a beard?</span>
+          <p>
+            You will be connected to a fellow traveller.
+            Play together, try to find eachother and get free coffee for two!<br>
+          </p>
+
+          <b>Ask them questions like these:</b>
+          <div class="question-selector">
+            <span class="message ours">Are you near platform 12?</span>
+            <span class="message ours">Do you have a beard?</span>
+          </div>
+          <br>
+          <b>And answer theirs:</b>
+          <div class="reply-selector">
+            <span
+              class="message ours"
+              v-for="option in replyOptions"
+              :key="option"
+            >{{option}}</span>
+          </div>
+
+          <p>Make sure you have at least 5 minutes to play.</p>
+          <button @click="introCount++">Next</button>
+
         </div>
-        <br>
-        <b>And answer them!</b>
-        <div class="reply-selector">
-          <span
-            class="message ours"
-            v-for="option in replyOptions"
-            :key="option"
-          >{{option}}</span>
-        </div>-->
-        
+        <div v-else>
+          <img
+            class="icon explain"
+            src="../assets/handshake-dark.svg"
+            alt="Found Eachother Icon"
+          >
 
-        <button @click="joinRoom">Start</button>
+          <p>When you have found eachother, click on the handshake icon to get your free coffee.</p>
 
-        <p class="disclaimer">Your messages will be logged for safety purposes</p>
+          <br>
+          <b>Good luck! Keep your eyes open :)</b>
+          <br>
+          <br>
+          <img
+            src="../assets/looking.svg"
+            alt="Connect For Coffee"
+            class="explain"
+          >
+          <button @click="joinRoom">Start</button>
+          <p class="disclaimer">Your messages may be monitored for safety purposes</p>
+        </div>
       </div>
     </section>
-    <footer :class="matchCode !== 0? 'open' :''">
+    <footer :class="(matchCode !== 0 && !gameWon)? 'open' :''">
       <div class="input">
         <img
           @click="modalOpen = true"
@@ -194,7 +208,8 @@ export default {
       modalInput: false,
       matchCode: 0,
       matchFound: false,
-      gameWon: false
+      gameWon: false,
+      introCount: 0
     };
   },
   created() {
@@ -242,6 +257,7 @@ export default {
       this.$nextTick(() =>
         JsBarcode(this.$refs.voucherCanvas, data.barcode, {
           background: null,
+          lineColor: "#652b29",
           displayValue: false
         })
       );
@@ -349,7 +365,10 @@ export default {
     },
     chooseQuestionBlank(option) {
       let emptyQuestion = this.newMessage;
-      let filledQuestion = emptyQuestion.replace(/\[+([^\][]+)]+/g, option.toLowerCase());
+      let filledQuestion = emptyQuestion.replace(
+        /\[+([^\][]+)]+/g,
+        option.toLowerCase()
+      );
 
       this.newMessage = filledQuestion;
       this.addMessage();
@@ -420,10 +439,13 @@ header,
 footer {
   background: #fcc8b2;
   backdrop-filter: blur(10px);
+  @media screen and (max-width: 380px), screen and (max-height: 675px) {
+    border-radius: 0 !important;
+  }
 }
 header {
   position: absolute;
-  height: 75px;
+  padding: 6px 0;
   width: 100%;
   border-bottom: 1px solid #fef1eb;
   text-align: center;
@@ -435,16 +457,11 @@ header {
   justify-content: center;
 }
 header .profile {
-  width: 50px;
-  height: 50px;
+  width: 45px;
+  height: 45px;
   border-radius: 25px;
   overflow: hidden;
   border: 2px solid #fef1eb;
-}
-header .profile img {
-}
-.explain{
-  max-width: 60px;
 }
 
 footer {
@@ -459,6 +476,15 @@ footer {
   transition: bottom 0.3s;
   padding: 10px;
   bottom: -60px;
+}
+footer .input img {
+  background: #652b29;
+  border: 2px solid #fef1eb;
+  border-radius: 15px;
+  overflow: hidden;
+}
+footer .input input {
+  height: 40px;
 }
 footer .input {
   display: grid;
@@ -484,6 +510,9 @@ footer input {
     background: #fef1eb;
   }
 }
+footer img {
+  width: 40px;
+}
 .scroll-container {
   scroll-behavior: smooth;
   overflow-x: scroll;
@@ -493,7 +522,7 @@ footer input {
   transition: height 0.2s;
   &.closed {
     height: 0px;
-    padding-top:0;
+    padding-top: 0;
   }
 }
 .scroll-container .question-blank {
@@ -573,9 +602,14 @@ footer input {
   background-size: cover;
   width: 100%;
   margin: 0;
+  margin-top: 60px;
   padding: 40px 0;
-  color: #000;
+  color: #652b29;
   max-width: none;
+  h1 {
+    font-size: 2em;
+    margin: 0;
+  }
 }
 .voucher canvas {
   max-width: 70%;
@@ -586,11 +620,22 @@ footer input {
   padding-bottom: 0;
   padding-top: 100px;
 }
+.emptyState img {
+  max-width: 300px;
+}
+.emptyState .explain {
+  max-width: 100px;
+  display: block;
+  margin: 0 auto;
+}
 .emptyState .message {
-    max-width: 90%;
-    margin: 10px;
-    background:#fcedda;
-    color:#000;
+  max-width: 90%;
+  margin: 10px;
+  background: #fcedda;
+  color: #000;
+  &:hover {
+    background: #fcedda;
+  }
 }
 /* TYPING ANIMATION
    Inspired by Joseph Fusco
@@ -648,7 +693,7 @@ footer input {
 
 button {
   background: none;
-  border:3px solid #6f262a;
+  border: 3px solid #6f262a;
   color: #6f262a;
   border-radius: 10px;
   transition: all 0.3s;
@@ -660,8 +705,15 @@ button {
 }
 
 button:hover {
-  background:#6f262a;
-  color:#fff;
+  background: #6f262a;
+  color: #fff;
 }
 
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s;
+}
+.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  opacity: 0;
+}
 </style>

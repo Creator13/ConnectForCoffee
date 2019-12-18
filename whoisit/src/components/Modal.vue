@@ -82,6 +82,7 @@ export default {
 .modal {
   background:#ecd6bf url('../assets/voucher.jpg') no-repeat bottom right; 
   background-size: cover;
+  color:#652b29;
   border-radius: 20px;
   padding: 20px 40px;
   position: absolute;
@@ -108,12 +109,5 @@ a{
     margin-top:20px;
     margin-bottom:10px;
     color:#313131;
-}
-
-.fade-enter-active, .fade-leave-active {
-  transition: opacity .2s;
-}
-.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
-  opacity: 0;
 }
 </style>
